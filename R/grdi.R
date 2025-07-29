@@ -13,14 +13,14 @@ amr_regexes <-function(){
 }
 
 #' Search for a valid ontology term from a GRDI-AMR2 field
-#'
+#' 
 #' @param field The GRDI field to be searched over
-#' @param x search term to be passed onto agrep
-#' @param ... other arguments passed onto [agrep()]
+#' @param x     Search term to be passed onto agrep
+#' @param ...   Other arguments passed onto [agrep()]
 #'
 #' @export
-grep_field_val <- function(field, x, ...) {
-  values <- grdi$fields[[field]]$values
+grep_field_val <- function(schema, field, x, ...) {
+  values <- get_menu_values(schema, field)
   result <- agrep(x = values, pattern = x, value = TRUE, ...)
   return(result)
 }
@@ -96,7 +96,7 @@ replace_with_GRDI_term <- function(df, col_name, term_query, data_query = NULL,
 #' @param x query to search for a specific ontology term
 #'
 #' @export
-get_null_value <- function(x=NULL){
+get_null_value <- function(schema, x=NULL){
   nulls <- names(grdi_schema$enums$`null value menu`$permissible_values)
   if (is.null(x)){
     return(nulls)
@@ -112,33 +112,32 @@ get_null_value <- function(x=NULL){
 
 #' Return the description and comments tags of a GRDI field
 #'
+#' @param schema 
 #' @param field GRDI field to query.
 #'
 #' @export
-get_info <- function(field){
-  f <- grdi$fields[[field]]
+get_info <- function(schema, field){
+  f <- s$slots[[field]]
   cat("Description: ", str_wrap(f$description, width = 80), "\n")
   cat("Comments: ", str_wrap(f$comments, width = 80), "\n")
 }
 
 #' Get a list of all the ontology terms used in the GRDI standard.
 #'
-#' Returns a datafram of fields and the terms in those fields
+#' @param schema
+#' 
+#' @return A named vector of all ontology terms from columns with menus, where
+#'         the name of each value is the specification field it belongs to.
 #'
 #' @export
-get_all_field_ontology_terms <- function(){
-  fields_w_menus <- get_fields_with_menus()
-  results <- list()
-  for (fn in fields_w_menus){
-    results[[fn]] <-
-      tibble(Field = fn,
-             Terms = as.character(grdi$fields[[fn]]$values))
-  }
-  df <- bind_rows(results)
-  filtered <-
-    df %>%
-    filter(!grepl(x=Terms, "organizational term"))
-
+get_all_field_ontology_terms <- function(schema){
+  x      <- all_menus_per_col(s)
+  values <- unlist(x, use.names = FALSE)
+  nm     <- rep(names(x), times = lengths(x))
+  names(values) <- nm
+  org_terms <- grepl(x=values, "organizational term")
+  nulls     <- values %in% get_null_value(schema)
+  filtered  <- values[!(nulls | org_terms)]
   return(filtered)
 }
 
@@ -152,16 +151,10 @@ get_all_field_ontology_terms <- function(){
 #' @param ... passed onto [agrep()] for fuzzy matching.
 #'
 #' @export
-agrep_across_all_field_terms <- function(x, ...) {
-  # Get a list of the field names and their associated terms.
-  fields <- get_fields_with_menus()
-  # Search for the user-input across all the field terms, and print to return
-  for ( field in fields ){
-    results <- agrep(pattern = x, x = grdi$fields[[field]]$values, value = TRUE, ...)
-    if (length(results)>0){
-      print(paste("Field:", field, "-->", results))
-    }
-  }
+agrep_across_all_field_terms <- function(schema, x, ...) {
+  fields <- get_all_field_ontology_terms(schema)
+  results <- agrep(pattern = x, x = fields, value = TRUE)
+  return(results)
 }
 
 #' Extract Ontology ID from GRDI term
@@ -202,29 +195,6 @@ separate_ontology_terms <- function(data, col){
   mutate(Term = trimws(Term),
          Id = sub(x = Id, "_", ":"))
 }
-
-#' Return the fields of a grdi categery
-#'
-#' Use this to return the fields (and their associated data) that belong
-#' to one of the GRDI field categories.
-#'
-#' @param x The GRDI group. Can be an approximate match
-#'
-#' @export
-get_fields_of_group <- function(x){
-
-  group <- agrep(x=grdi$groups, x, ignore.case = TRUE, value = TRUE, max.distance = 0.1)
-  stopifnot("x must uniquely match a group" = length(group)==1)
-
-  fields <- list()
-  for (fn in names(grdi$fields)){
-    if ( grdi$fields[[fn]]$group == group ){
-      fields[[fn]] <- grdi$fields[[fn]]
-    }
-  }
-  return(fields)
-}
-
 
 #' amr_regexes
 #'
