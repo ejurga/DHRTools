@@ -1,3 +1,17 @@
+#' amr_regexes
+#'
+#' Rerturn a vector to filter out AMR columns
+#'
+#' @export
+amr_regexes <-function(){
+    c("_resistance_phenotype$",
+      "_measurement(_units|_sign){0,1}$",
+      "_laboratory_typing_[a-z_]+$",
+      "_vendor_name$",
+      "_testing_standard[a-z_]{0,}$",
+      "_breakpoint$")
+}
+
 #' Search for a valid ontology term from a GRDI-AMR2 field
 #'
 #' @param field The GRDI field to be searched over
@@ -9,22 +23,6 @@ grep_field_val <- function(field, x, ...) {
   values <- grdi$fields[[field]]$values
   result <- agrep(x = values, pattern = x, value = TRUE, ...)
   return(result)
-}
-
-#' Get a vector of GRDI fields that have pick-lists
-#'
-#' To get a list of the GRDI fields that have mandatory values (ontologies)
-#' to be selected
-#'
-#' @export
-get_fields_with_menus <- function(){
-  slots <- vector()
-  for (fn in names(grdi$fields)){
-    if ( grdi$fields[[fn]]$pick_list==TRUE ){
-      slots <- c(slots, fn)
-    }
-  }
-  return(slots)
 }
 
 #' Replace values in a column with GRDI ontologies

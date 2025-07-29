@@ -1,27 +1,74 @@
-#' Get ontology values from the excel sheet.
-#'
-#' @export
-excel_lookup_values <- function(template_file){
+get_schema <- function(){
+  file <- tempfile()
+  grdi_yaml_url <- "https://raw.githubusercontent.com/cidgoh/pathogen-genomics-package/main/templates/grdi/schema.yaml"
+  download.file(url = grdi_yaml_url, destfile = file, method = "wget",  extra = "-4")
+  schema <- yaml::yaml.load_file(file)
+  return(schema)
+}
 
-  #Get the version
-  version <-
-    sub(x = template_file, "^.+(v[0-9]{2}\\.[0-9]{1,2}\\.[0-9]{1,2})\\.xlsm$", "\\1")
-  # Rename file
-  new_file <- tempfile(fileext = ".xlsx")
-  file.copy(template_file, new_file)
-  # Read into dataframe
-  df <- openxlsx::read.xlsx(xlsxFile = new_file,
-                            startRow = 2,
-                            colNames = TRUE, sep.names = ' ',
-                            sheet = "Vocabulary") %>% as_tibble()
-  # Format
-  excel_lookup_values <-
-    df %>%
-    pivot_longer(cols = everything(),
-    names_to = "Field", values_to = "Terms",
-    values_drop_na = TRUE) %>%
-    separate_ontology_terms(Terms) %>%
-    mutate(version = version)
+slot_names <- function(schema){
+  return(names(schema$slots))
+}
 
-  return(excel_lookup_values)
+get_category <- function(schema, slots){
+ usage <- schema$classes$GRDI$slot_usage
+ sapply(FUN=function(x) usage[[x]]$slot_group, X=slots, USE.NAMES = FALSE)
+}
+
+categories <- function(schema){
+  unique(get_category(schema, slots = slot_names(schema)))
+}
+
+get_slots_per_cat <- function(schema, category){
+  if ( !all(category %in% categories(schema)) ){
+    stop("supplied category not found in schema")
+  }
+  all_slots <- slot_names(schema)
+  cats      <- get_category(schema, slots = all_slots)
+  x <- all_slots[cats %in% category]
+  return(x)
+}
+
+get_menu_values <- function(schema, column){
+  menu_names <- col_ranges(schema, column)
+  if (any(menu_names %in% c("WhitespaceMinimizedString", "date", "time"))){
+    return(NULL)
+  } else {
+    all_vals <- c()
+    for (menu in menu_names){
+      vals <- names(schema$enums[[menu]]$permissible_values)
+      all_vals <- append(all_vals, vals)
+    }
+    return(all_vals)
+  }
+}
+
+col_ranges <- function(schema, column){
+  slots <- schema$slots
+  any_ofs <- unlist(slots[[column]]$any_of)
+  ranges <-  unlist(slots[[column]]$range)
+  menus <- unname(c(any_ofs, ranges))
+  return(menus)
+}
+
+get_field_importance <- function(schema, col){
+  if (!col %in% names(schema$slots)) stop("col not found in schema")
+  slots <- schema$slots
+  if (!is.null(slots[[col]]$required)){
+    return("required")
+  } else if (!is.null(slots[[col]]$recommended)){
+    return("recommended")
+  } else {
+    return("normal")
+  }
+}
+
+all_menus_per_col <- function(schema){
+  cols <- names(schema$slots)
+  amr_index <- unlist(lapply(FUN = grep, X = amr_regexes(), x = cols))
+  # Remove AMR slots
+  cols_no_amr <- cols[-amr_index]
+  vals <- sapply(FUN=get_menu_values, X=cols_no_amr, schema = schema)
+  menus <- vals[lengths(vals)>0]
+  return(menus)
 }
