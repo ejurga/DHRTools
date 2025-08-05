@@ -12,6 +12,14 @@ amr_regexes <-function(){
       "_breakpoint$")
 }
 
+#' Append a term term if there are values already: 
+#' 
+append_term <- function(x, terms){
+  x[ is.na(x)] <- terms
+  x[!is.na(x)] <- paste(x[!is.na(x)], term, sep = '; ')
+  return(x)
+}
+
 #' Search for a valid ontology term from a GRDI-AMR2 field
 #' 
 #' @param field The GRDI field to be searched over
