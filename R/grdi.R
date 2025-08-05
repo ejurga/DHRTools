@@ -17,7 +17,7 @@ amr_regexes <-function(){
 #' @export
 append_term <- function(x, terms){
   x[ is.na(x)] <- terms
-  x[!is.na(x)] <- paste(x[!is.na(x)], term, sep = '; ')
+  x[!is.na(x)] <- paste(x[!is.na(x)], terms, sep = '; ')
   return(x)
 }
 
