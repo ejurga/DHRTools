@@ -13,10 +13,14 @@ menus_as_df <- function(schema){
   return(df)
 }
 
-make_sheet_from_slots <- function(schema, wb, sheet_name, slots, col_order = NULL){
+make_sheet_from_slots <- function(schema, wb, sheet_name, slots, headers = NULL){
   openxlsx::addWorksheet(wb, sheet_name)
   openxlsx::activeSheet(wb) <- sheet_name
-  cats <- get_category(schema, slots)
+  if (is.null(headers)){
+    cats <- get_category(schema, slots)
+  } else {
+    cats <- headers
+  }
   m <- matrix(data=c(cats, slots), nrow=2, ncol = length(slots), byrow = T)
   openxlsx::writeData(wb = wb, sheet = openxlsx::activeSheet(wb), x = m, colNames = F)
   bold_style <- openxlsx::createStyle(textDecoration = "bold")
