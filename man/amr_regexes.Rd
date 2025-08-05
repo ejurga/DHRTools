@@ -5,7 +5,11 @@
 \title{amr_regexes}
 \usage{
 amr_regexes()
+
+amr_regexes()
 }
 \description{
+Rerturn a vector to filter out AMR columns
+
 Rerturn a vector to filter out AMR columns
 }

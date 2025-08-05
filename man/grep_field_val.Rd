@@ -4,14 +4,14 @@
 \alias{grep_field_val}
 \title{Search for a valid ontology term from a GRDI-AMR2 field}
 \usage{
-grep_field_val(field, x, ...)
+grep_field_val(schema, field, x, ...)
 }
 \arguments{
 \item{field}{The GRDI field to be searched over}
 
-\item{x}{search term to be passed onto agrep}
+\item{x}{Search term to be passed onto agrep}
 
-\item{...}{other arguments passed onto \code{\link[=agrep]{agrep()}}}
+\item{...}{Other arguments passed onto \code{\link[=agrep]{agrep()}}}
 }
 \description{
 Search for a valid ontology term from a GRDI-AMR2 field

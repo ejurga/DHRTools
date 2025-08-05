@@ -4,7 +4,7 @@
 \alias{get_null_value}
 \title{Get a GRDI ontology null value}
 \usage{
-get_null_value(x = NULL)
+get_null_value(schema, x = NULL)
 }
 \arguments{
 \item{x}{query to search for a specific ontology term}

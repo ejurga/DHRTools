@@ -2,11 +2,10 @@
 
 export(agrep_across_all_field_terms)
 export(amr_regexes)
+export(append_term)
 export(compare_lookup_tables)
 export(excel_lookup_values)
 export(get_all_field_ontology_terms)
-export(get_fields_of_group)
-export(get_fields_with_menus)
 export(get_info)
 export(get_null_value)
 export(get_terms_from_excel_and_yaml_sources)

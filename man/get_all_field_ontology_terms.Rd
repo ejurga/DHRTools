@@ -4,8 +4,15 @@
 \alias{get_all_field_ontology_terms}
 \title{Get a list of all the ontology terms used in the GRDI standard.}
 \usage{
-get_all_field_ontology_terms()
+get_all_field_ontology_terms(schema)
+}
+\arguments{
+\item{schema}{}
+}
+\value{
+A named vector of all ontology terms from columns with menus, where
+the name of each value is the specification field it belongs to.
 }
 \description{
-Returns a datafram of fields and the terms in those fields
+Get a list of all the ontology terms used in the GRDI standard.
 }

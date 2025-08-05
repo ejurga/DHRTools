@@ -14,6 +14,7 @@ amr_regexes <-function(){
 
 #' Append a term term if there are values already: 
 #' 
+#' @export
 append_term <- function(x, terms){
   x[ is.na(x)] <- terms
   x[!is.na(x)] <- paste(x[!is.na(x)], term, sep = '; ')

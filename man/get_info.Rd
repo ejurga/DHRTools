@@ -4,9 +4,11 @@
 \alias{get_info}
 \title{Return the description and comments tags of a GRDI field}
 \usage{
-get_info(field)
+get_info(schema, field)
 }
 \arguments{
+\item{schema}{}
+
 \item{field}{GRDI field to query.}
 }
 \description{

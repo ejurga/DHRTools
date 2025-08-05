@@ -4,7 +4,7 @@
 \alias{agrep_across_all_field_terms}
 \title{Search for an ontology term across all the possible GRDI fields.}
 \usage{
-agrep_across_all_field_terms(x, ...)
+agrep_across_all_field_terms(schema, x, ...)
 }
 \arguments{
 \item{x}{query to search the ontology terms with.}
