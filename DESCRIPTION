@@ -1,7 +1,7 @@
 Package: grdiamR
 Type: Package
 Title: For interacting with the GRDI-AMR2 data template and ontology
-Version: 0.5
+Version: 0.5.1
 Author: Emil Jurga
 Maintainer: Emil Jurga <ejacc@protonmail.com>
 Description: Provides functions to interact with the GRDI-AMR2 ontology
