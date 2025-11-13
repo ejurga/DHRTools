@@ -42,8 +42,9 @@ slot_names <- function(schema){
 #' 
 #' @return A named list of the slots with their category
 get_category <- function(schema, slots){
- usage <- schema$classes[[2]]$slot_usage
- sapply(FUN=function(x) usage[[x]]$slot_group, X=slots, USE.NAMES = FALSE)
+  check_slots_in_schema(schema,slots)
+  usage <- schema$classes[[2]]$slot_usage
+  sapply(FUN=function(x) usage[[x]]$slot_group, X=slots, USE.NAMES = FALSE)
 }
 
 #' Get the categories that the schema uses to group its slots
@@ -80,6 +81,7 @@ get_slots_per_cat <- function(schema, category){
 #' @returns A vector of the range names
 #' @keywords internal
 slot_ranges <- function(schema, slot){
+  check_slots_in_schema(schema,slot)
   slots <- schema$slots
   any_ofs <- unlist(slots[[slot]]$any_of)
   ranges <-  unlist(slots[[slot]]$range)
@@ -97,6 +99,7 @@ slot_ranges <- function(schema, slot){
 #' @returns A vector of permissible values for the slot
 #' @keywords internal
 get_menu_values <- function(schema, slot){
+  check_slots_in_schema(schema,slot)
   menu_names <- slot_ranges(schema, slot)
   if (any(menu_names %in% c("WhitespaceMinimizedString", "date", "time"))){
     return(NULL)
@@ -119,7 +122,7 @@ get_menu_values <- function(schema, slot){
 #' @return The importance of the field
 #' @keywords internal
 get_field_importance <- function(schema, slot){
-  if (!slot %in% names(schema$slots)) stop("col not found in schema")
+  check_slots_in_schema(schema,slot)
   slots <- schema$slots
   if (!is.null(slots[[col]]$required)){
     return("required")
@@ -177,6 +180,7 @@ get_null_value <- function(schema, x=NULL){
 #'
 #' @export
 get_info <- function(schema, slot){
+  check_slots_in_schema(schema,slot)
   f <- schema$slots[[slot]]
   cat("Description: ", str_wrap(f$description, width = 80), "\n")
   cat("Comments: ", str_wrap(f$comments, width = 80), "\n")
