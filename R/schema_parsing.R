@@ -1,34 +1,66 @@
-
+#' Holds a list of urls from which to download schema files
+#' 
+#' @keywords internal
 schema_urls <- function(){
   urls <- list()
   urls$grdi <- "https://raw.githubusercontent.com/cidgoh/pathogen-genomics-package/main/templates/grdi/schema.yaml"
   return(urls)
 }
 
+#' Download a schema file from a url
+#' 
+#' @keywords internal
 download_schema <- function(yaml_url){
   file <- tempfile()
   download.file(url = yaml_url, destfile = file, method = "wget",  extra = "-4")
   return(file)
 }
 
+#' Load a schema file
+#' 
+#' @param file The path to the yaml schema file
+#' @returns A schema file -> really just a parsed YAML loaded into R.
+#' @keywords internal
 load_schema <- function(file){
   schema <- yaml::yaml.load_file(file)
   return(schema)
 }
 
+#' Get the slots of a schema
+#' 
+#' Get the slots (or columns) of a schema
+#' 
+#' @param schema A schema file returned from [load_schema]
 slot_names <- function(schema){
   return(names(schema$slots))
 }
 
+#' Get the category of the slots
+#' 
+#' @inheritParams slot_names
+#' @param slots A vector of slots
+#' 
+#' @return A named list of the slots with their category
 get_category <- function(schema, slots){
  usage <- schema$classes[[2]]$slot_usage
  sapply(FUN=function(x) usage[[x]]$slot_group, X=slots, USE.NAMES = FALSE)
 }
 
+#' Get the categories that the schema uses to group its slots
+#' 
+#' @inheritParams slot_names
+#' 
+#' @returns a vector of the categories of the schema
 categories <- function(schema){
   unique(get_category(schema, slots = slot_names(schema)))
 }
 
+#' Get all the slots that belong to the supplied category
+#' 
+#' @inheritParams slot_names
+#' @param category A single category
+#' 
+#' @returns a vector of the slots that belong to the category
 get_slots_per_cat <- function(schema, category){
   if ( !all(category %in% categories(schema)) ){
     stop("supplied category not found in schema")
@@ -39,8 +71,33 @@ get_slots_per_cat <- function(schema, category){
   return(x)
 }
 
-get_menu_values <- function(schema, column){
-  menu_names <- col_ranges(schema, column)
+#' Retreive the ranges of a slot
+#' 
+#' Returns the 'range' value of a slot.
+#' 
+#' @inheritParams slot_names
+#' @param slot A name of a single slot
+#' @returns A vector of the range names
+#' @keywords internal
+slot_ranges <- function(schema, slot){
+  slots <- schema$slots
+  any_ofs <- unlist(slots[[column]]$any_of)
+  ranges <-  unlist(slots[[column]]$range)
+  menus <- unname(c(any_ofs, ranges))
+  return(menus)
+}
+
+#' Get the permissible values of a slot 
+#' 
+#' Some slots are restricted to a picklist. 
+#' Get the permissible values of the slot
+#' 
+#' @inheritParams slot_ranges
+#' 
+#' @returns A vector of permissible values for the slot
+#' @keywords internal
+get_menu_values <- function(schema, slot){
+  menu_names <- slot_ranges(schema, slot)
   if (any(menu_names %in% c("WhitespaceMinimizedString", "date", "time"))){
     return(NULL)
   } else {
@@ -53,16 +110,16 @@ get_menu_values <- function(schema, column){
   }
 }
 
-col_ranges <- function(schema, column){
-  slots <- schema$slots
-  any_ofs <- unlist(slots[[column]]$any_of)
-  ranges <-  unlist(slots[[column]]$range)
-  menus <- unname(c(any_ofs, ranges))
-  return(menus)
-}
-
-get_field_importance <- function(schema, col){
-  if (!col %in% names(schema$slots)) stop("col not found in schema")
+#' Get the importance of a slot 
+#' 
+#' The standards often define the importance of a slot. 
+#' Retrieve this for a single slot.
+#' 
+#' @inheritParams get_menu_values
+#' @return The importance of the field
+#' @keywords internal
+get_field_importance <- function(schema, slot){
+  if (!slot %in% names(schema$slots)) stop("col not found in schema")
   slots <- schema$slots
   if (!is.null(slots[[col]]$required)){
     return("required")
@@ -73,6 +130,13 @@ get_field_importance <- function(schema, col){
   }
 }
 
+#' Get all the enums for each slot
+#' 
+#' Return a giant list of the slots and their corresponding enum entries
+#' 
+#' @inheritParams slot_names
+#' @return A named list of the slots and their enums
+#' @keywords internal
 all_menus_per_col <- function(schema){
   cols <- names(schema$slots)
   # Remove AMR slots, but only if they are present.
@@ -83,13 +147,15 @@ all_menus_per_col <- function(schema){
   return(menus)
 }
 
-#' Get a GRDI ontology null value
+#' Get the null value of the schema
 #'
 #' Returns a valid NULL value. If no query is supplied to search for a specific
 #' ontology term, than a list of all the possible NULL values are supplied.
 #'
-#' @param x query to search for a specific ontology term
-#'
+#' @inheritParams slot_names
+#' @param x Qery to search for a specific ontology term
+#' @return A schema compliant null value
+#' @keywords internal
 #' @export
 get_null_value <- function(schema, x=NULL){
   nulls <- names(schema$enums$`null value menu`$permissible_values)
@@ -107,19 +173,18 @@ get_null_value <- function(schema, x=NULL){
 
 #' Return the description and comments tags of a GRDI field
 #'
-#' @param schema 
-#' @param field GRDI field to query.
+#' @inheritParams get_menu_values
 #'
 #' @export
-get_info <- function(schema, field){
-  f <- schema$slots[[field]]
+get_info <- function(schema, slot){
+  f <- schema$slots[[slot]]
   cat("Description: ", str_wrap(f$description, width = 80), "\n")
   cat("Comments: ", str_wrap(f$comments, width = 80), "\n")
 }
 
 #' Get a list of all the ontology terms used in the standard.
 #'
-#' @param schema
+#' @inheritParams slot_names
 #' 
 #' @return A named vector of all ontology terms from columns with menus, where
 #'         the name of each value is the specification field it belongs to.
