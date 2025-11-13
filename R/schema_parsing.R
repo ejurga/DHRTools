@@ -82,3 +82,56 @@ all_menus_per_col <- function(schema){
   menus <- vals[lengths(vals)>0]
   return(menus)
 }
+
+#' Get a GRDI ontology null value
+#'
+#' Returns a valid NULL value. If no query is supplied to search for a specific
+#' ontology term, than a list of all the possible NULL values are supplied.
+#'
+#' @param x query to search for a specific ontology term
+#'
+#' @export
+get_null_value <- function(schema, x=NULL){
+  nulls <- names(schema$enums$`null value menu`$permissible_values)
+  if (is.null(x)){
+    return(nulls)
+  } else {
+    value <- grep(x = nulls, pattern = x, value = TRUE)
+    if (length(value)==0){
+      stop("No value found for query ", x, " in null value menu")
+    } else {
+      return(value)
+    }
+  }
+}
+
+#' Return the description and comments tags of a GRDI field
+#'
+#' @param schema 
+#' @param field GRDI field to query.
+#'
+#' @export
+get_info <- function(schema, field){
+  f <- schema$slots[[field]]
+  cat("Description: ", str_wrap(f$description, width = 80), "\n")
+  cat("Comments: ", str_wrap(f$comments, width = 80), "\n")
+}
+
+#' Get a list of all the ontology terms used in the standard.
+#'
+#' @param schema
+#' 
+#' @return A named vector of all ontology terms from columns with menus, where
+#'         the name of each value is the specification field it belongs to.
+#'
+#' @export
+get_all_field_ontology_terms <- function(schema){
+  x      <- all_menus_per_col(schema)
+  values <- unlist(x, use.names = FALSE)
+  nm     <- rep(names(x), times = lengths(x))
+  names(values) <- nm
+  org_terms <- grepl(x=values, "organizational term")
+  nulls     <- values %in% get_null_value(schema)
+  filtered  <- values[!(nulls | org_terms)]
+  return(filtered)
+}

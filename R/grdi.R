@@ -96,60 +96,6 @@ replace_with_GRDI_term <- function(df, col_name, term_query, data_query = NULL,
   }
 }
 
-
-#' Get a GRDI ontology null value
-#'
-#' Returns a valid NULL value. If no query is supplied to search for a specific
-#' ontology term, than a list of all the possible NULL values are supplied.
-#'
-#' @param x query to search for a specific ontology term
-#'
-#' @export
-get_null_value <- function(schema, x=NULL){
-  nulls <- names(schema$enums$`null value menu`$permissible_values)
-  if (is.null(x)){
-    return(nulls)
-  } else {
-    value <- grep(x = nulls, pattern = x, value = TRUE)
-    if (length(value)==0){
-      stop("No value found for query ", x, " in null value menu")
-    } else {
-      return(value)
-    }
-  }
-}
-
-#' Return the description and comments tags of a GRDI field
-#'
-#' @param schema 
-#' @param field GRDI field to query.
-#'
-#' @export
-get_info <- function(schema, field){
-  f <- schema$slots[[field]]
-  cat("Description: ", str_wrap(f$description, width = 80), "\n")
-  cat("Comments: ", str_wrap(f$comments, width = 80), "\n")
-}
-
-#' Get a list of all the ontology terms used in the GRDI standard.
-#'
-#' @param schema
-#' 
-#' @return A named vector of all ontology terms from columns with menus, where
-#'         the name of each value is the specification field it belongs to.
-#'
-#' @export
-get_all_field_ontology_terms <- function(schema){
-  x      <- all_menus_per_col(schema)
-  values <- unlist(x, use.names = FALSE)
-  nm     <- rep(names(x), times = lengths(x))
-  names(values) <- nm
-  org_terms <- grepl(x=values, "organizational term")
-  nulls     <- values %in% get_null_value(schema)
-  filtered  <- values[!(nulls | org_terms)]
-  return(filtered)
-}
-
 #' Search for an ontology term across all the possible GRDI fields.
 #'
 #' In case you want to search for a specific ontology term across all the
@@ -164,45 +110,6 @@ agrep_across_all_field_terms <- function(schema, x, ...) {
   fields <- get_all_field_ontology_terms(schema)
   results <- agrep(pattern = x, x = fields, value = TRUE)
   return(results)
-}
-
-#' Extract Ontology ID from GRDI term
-#'
-#' @param x Vector of GRDI terms in the format "Term name \[ONTOLOGY:0000000\]"
-#'
-extract_ont_id <- function(x){
-  sub(x = x, "^.+\\[([A-Za-z_]+)[:_]([A-Z0-9]+)\\]", "\\1:\\2")
-}
-
-#' Get ontology name from an ontology ID
-#'
-#' Given a vector of ontology IDs (In the form of ONTOLOGY:00000000),
-#' returns the lowercase name of the ontology ("ontology")
-#'
-#' @param x vector of ontology IDs
-#'
-extract_ontology_name <- function(x){
-  tolower(sub(x = x, "([A-Za-z_]+):[A-Z0-9]+", "\\1"))
-}
-
-#' Separate GRDI ontology terms into two columns with the Term and ID
-#'
-#' A tidyverse eval function. Uses [tidyr::separate_wider_regex] to
-#' separate a column of form "Term Name \[ONTOLOGY:00000000\]" in the
-#' Term name in one column and the ID into another
-#'
-#' @param data  a data frame
-#' @param <tidy-select> Column to separate
-#'
-#' @export
-separate_ontology_terms <- function(data, col){
-  separate_wider_regex(data, {{ col }},
-                       patterns = c(Term = "^.+",
-                                    "\\[",
-                                    Id = "[A-Za-z_]+[:_][A-Z0-9]+",
-                                    "\\]$"), too_few = "align_start") %>%
-  mutate(Term = trimws(Term),
-         Id = sub(x = Id, "_", ":"))
 }
 
 #' Attempts to replace all values in a vector with GRDI terms
