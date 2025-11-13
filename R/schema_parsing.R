@@ -81,8 +81,8 @@ get_slots_per_cat <- function(schema, category){
 #' @keywords internal
 slot_ranges <- function(schema, slot){
   slots <- schema$slots
-  any_ofs <- unlist(slots[[column]]$any_of)
-  ranges <-  unlist(slots[[column]]$range)
+  any_ofs <- unlist(slots[[slot]]$any_of)
+  ranges <-  unlist(slots[[slot]]$range)
   menus <- unname(c(any_ofs, ranges))
   return(menus)
 }
@@ -183,6 +183,10 @@ get_info <- function(schema, slot){
 }
 
 #' Get a list of all the ontology terms used in the standard.
+#'
+#' This function retrieves a list of all the enums (terms) used in a standard, 
+#' returned as a named list. Organisational terms and nulls are removed from 
+#' this list, for ease of searching through them
 #'
 #' @inheritParams slot_names
 #' 
