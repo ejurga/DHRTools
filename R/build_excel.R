@@ -6,7 +6,7 @@ make_menu_sheet <- function(schema, wb){
 }
 
 menus_as_df <- function(schema){
-  menus <- all_menus_per_col(schema)
+  menus <- all_enums_per_col(schema)
   n <- max(length(menus))
   menus_n <- lapply(menus, `length<-`, n)
   df <- as.data.frame(menus_n)
@@ -26,7 +26,7 @@ make_sheet_from_slots <- function(schema, wb, sheet_name, slots, headers = NULL)
   bold_style <- openxlsx::createStyle(textDecoration = "bold")
   openxlsx::addStyle(wb = wb, sheet = openxlsx::activeSheet(wb), rows = 1:nrow(m), cols = 1:ncol(m), style = bold_style, gridExpand = TRUE, stack = TRUE)
   merge_same_horizontal(wb, x = cats, rows = 1)
-  cols_with_menus <- names(all_menus_per_col(schema))
+  cols_with_menus <- names(all_enums_per_col(schema))
   cols_to_val <- slots[slots %in% cols_with_menus]
   sapply(FUN=apply_dropdown_validation, X=cols_to_val, wb=wb)
   sapply(FUN=format_according_to_importance, X=slots, wb=wb, schema=schema)

@@ -137,7 +137,7 @@ get_field_importance <- function(schema, slot){
 #' @inheritParams slot_names
 #' @return A named list of the slots and their enums
 #' @keywords internal
-all_menus_per_col <- function(schema){
+all_enums_per_col <- function(schema){
   cols <- names(schema$slots)
   # Remove AMR slots, but only if they are present.
   amr_index <- unlist(lapply(FUN = grep, X = amr_regexes(), x = cols))
@@ -191,7 +191,7 @@ get_info <- function(schema, slot){
 #'
 #' @export
 get_all_field_ontology_terms <- function(schema){
-  x      <- all_menus_per_col(schema)
+  x      <- all_enums_per_col(schema)
   values <- unlist(x, use.names = FALSE)
   nm     <- rep(names(x), times = lengths(x))
   names(values) <- nm
