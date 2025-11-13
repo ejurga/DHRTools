@@ -1,7 +1,17 @@
-get_schema <- function(){
+
+schema_urls <- function(){
+  urls <- list()
+  urls$grdi <- "https://raw.githubusercontent.com/cidgoh/pathogen-genomics-package/main/templates/grdi/schema.yaml"
+  return(urls)
+}
+
+download_schema <- function(yaml_url){
   file <- tempfile()
-  grdi_yaml_url <- "https://raw.githubusercontent.com/cidgoh/pathogen-genomics-package/main/templates/grdi/schema.yaml"
-  download.file(url = grdi_yaml_url, destfile = file, method = "wget",  extra = "-4")
+  download.file(url = yaml_url, destfile = file, method = "wget",  extra = "-4")
+  return(file)
+}
+
+load_schema <- function(file){
   schema <- yaml::yaml.load_file(file)
   return(schema)
 }
@@ -11,7 +21,7 @@ slot_names <- function(schema){
 }
 
 get_category <- function(schema, slots){
- usage <- schema$classes$GRDI$slot_usage
+ usage <- schema$classes[[2]]$slot_usage
  sapply(FUN=function(x) usage[[x]]$slot_group, X=slots, USE.NAMES = FALSE)
 }
 
@@ -65,10 +75,10 @@ get_field_importance <- function(schema, col){
 
 all_menus_per_col <- function(schema){
   cols <- names(schema$slots)
+  # Remove AMR slots, but only if they are present.
   amr_index <- unlist(lapply(FUN = grep, X = amr_regexes(), x = cols))
-  # Remove AMR slots
-  cols_no_amr <- cols[-amr_index]
-  vals <- sapply(FUN=get_menu_values, X=cols_no_amr, schema = schema)
+  if (length(amr_index)>0) cols <- cols[-amr_index]
+  vals <- sapply(FUN=get_menu_values, X=cols, schema = schema)
   menus <- vals[lengths(vals)>0]
   return(menus)
 }
