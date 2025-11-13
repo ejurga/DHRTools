@@ -106,7 +106,7 @@ replace_with_GRDI_term <- function(df, col_name, term_query, data_query = NULL,
 #'
 #' @export
 get_null_value <- function(schema, x=NULL){
-  nulls <- names(grdi_schema$enums$`null value menu`$permissible_values)
+  nulls <- names(schema$enums$`null value menu`$permissible_values)
   if (is.null(x)){
     return(nulls)
   } else {
@@ -126,7 +126,7 @@ get_null_value <- function(schema, x=NULL){
 #'
 #' @export
 get_info <- function(schema, field){
-  f <- s$slots[[field]]
+  f <- schema$slots[[field]]
   cat("Description: ", str_wrap(f$description, width = 80), "\n")
   cat("Comments: ", str_wrap(f$comments, width = 80), "\n")
 }
@@ -140,7 +140,7 @@ get_info <- function(schema, field){
 #'
 #' @export
 get_all_field_ontology_terms <- function(schema){
-  x      <- all_menus_per_col(s)
+  x      <- all_menus_per_col(schema)
   values <- unlist(x, use.names = FALSE)
   nm     <- rep(names(x), times = lengths(x))
   names(values) <- nm
@@ -203,20 +203,6 @@ separate_ontology_terms <- function(data, col){
                                     "\\]$"), too_few = "align_start") %>%
   mutate(Term = trimws(Term),
          Id = sub(x = Id, "_", ":"))
-}
-
-#' amr_regexes
-#'
-#' Rerturn a vector to filter out AMR columns
-#'
-#' @export
-amr_regexes <-function(){
-    c("_resistance_phenotype$",
-      "_measurement(_units|_sign){0,1}$",
-      "_laboratory_typing_[a-z_]+$",
-      "_vendor_name$",
-      "_testing_standard[a-z_]{0,}$",
-      "_breakpoint$")
 }
 
 #' Attempts to replace all values in a vector with GRDI terms
