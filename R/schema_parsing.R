@@ -124,9 +124,9 @@ get_menu_values <- function(schema, slot){
 get_field_importance <- function(schema, slot){
   check_slots_in_schema(schema,slot)
   slots <- schema$slots
-  if (!is.null(slots[[col]]$required)){
+  if (!is.null(slots[[slot]]$required)){
     return("required")
-  } else if (!is.null(slots[[col]]$recommended)){
+  } else if (!is.null(slots[[slot]]$recommended)){
     return("recommended")
   } else {
     return("normal")
@@ -207,4 +207,15 @@ get_all_field_ontology_terms <- function(schema){
   nulls     <- values %in% get_null_value(schema)
   filtered  <- values[!(nulls | org_terms)]
   return(filtered)
+}
+
+#' Get the regex pattern of the slots
+#' 
+#' @inheritParams get_category
+#' @returns a named vector of the regex that applies to the slot, or NA if none present
+#' @keywords internal, parsing
+get_pattern <- function(schema, slots){
+    x <- sapply(slots, function(x) schema$slots[[x]]$pattern, simplify = T)
+    x <- sapply(x    , function(x) if (is.null(x)) return(NA) else return(x))
+    return(x)
 }
