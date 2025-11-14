@@ -89,28 +89,34 @@ slot_ranges <- function(schema, slot){
   return(menus)
 }
 
-#' Get the permissible values of a slot 
+#' Get the permissible values of a range, if they exist
 #' 
-#' Some slots are restricted to a picklist. 
-#' Get the permissible values of the slot
+#' All slots have ranges. Some of these ranges have values
+#' Get the permissible values of each range,
+#' 
+#' @inheritParams slot_ranges
+#' @param ranges A list of ranges, returned from [slot_ranges]
+#' 
+#' @returns A vector of permissible values for each range, NULL if none exist
+#' @keywords internal
+get_menu_values <- function(schema, ranges){
+  x <- sapply(ranges, function(x) names(schema$enums[[x]]$permissible_values))
+  return(x)
+}
+
+#' Get all the permissible values of a slot, if they exist.
+#' 
+#' This gets the permissible values of each range and appends them into 
+#' a single vector. This includes the values of the NullValueMenu
 #' 
 #' @inheritParams slot_ranges
 #' 
 #' @returns A vector of permissible values for the slot
-#' @keywords internal
-get_menu_values <- function(schema, slot){
-  check_slots_in_schema(schema,slot)
-  menu_names <- slot_ranges(schema, slot)
-  if (any(menu_names %in% c("WhitespaceMinimizedString", "date", "time"))){
-    return(NULL)
-  } else {
-    all_vals <- c()
-    for (menu in menu_names){
-      vals <- names(schema$enums[[menu]]$permissible_values)
-      all_vals <- append(all_vals, vals)
-    }
-    return(all_vals)
-  }
+#' @keywords internal, parsing
+get_permissible_values <- function(schema, slot){
+  ranges <- slot_ranges(schema, slot)    
+  vals <- get_menu_values(schema, ranges)
+  return(unname(unlist(vals)))
 }
 
 #' Get the importance of a slot 
@@ -145,7 +151,7 @@ all_enums_per_col <- function(schema){
   # Remove AMR slots, but only if they are present.
   amr_index <- unlist(lapply(FUN = grep, X = amr_regexes(), x = cols))
   if (length(amr_index)>0) cols <- cols[-amr_index]
-  vals <- sapply(FUN=get_menu_values, X=cols, schema = schema)
+  vals <- sapply(FUN=get_permissible_values, X=cols, schema = schema)
   menus <- vals[lengths(vals)>0]
   return(menus)
 }

@@ -29,7 +29,7 @@ append_term <- function(x, terms){
 #'
 #' @export
 grep_field_val <- function(schema, field, x, ...) {
-  values <- get_menu_values(schema, field)
+  values <- get_permissible_values(schema, field)
   result <- agrep(x = values, pattern = x, value = TRUE, ...)
   return(result)
 }
