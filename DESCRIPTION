@@ -1,10 +1,10 @@
-Package: grdiamR
+Package: DH-RTools
 Type: Package
-Title: For interacting with the GRDI-AMR2 data template and ontology
-Version: 0.5.1
+Title: A Suite of tools for parsing DataHarmonizer templates and validating data.
+Version: 0.6.0
 Author: Emil Jurga
 Maintainer: Emil Jurga <ejacc@protonmail.com>
-Description: Provides functions to interact with the GRDI-AMR2 ontology
+Description: This package parses DataHarmonizer YAML schema files, providing functions to interact with the schema. It also provides tools to use the data schema to validate data.
 License: What license is it under?
 Encoding: UTF-8
 LazyData: true
