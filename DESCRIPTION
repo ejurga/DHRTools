@@ -1,4 +1,4 @@
-Package: DH-RTools
+Package: DHRTools
 Type: Package
 Title: A Suite of tools for parsing DataHarmonizer templates and validating data.
 Version: 0.6.0
