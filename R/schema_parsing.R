@@ -1,6 +1,6 @@
 #' Holds a list of urls from which to download schema files
 #' 
-#' @keywords internal
+#' @keywords internal, parsing
 schema_urls <- function(){
   urls <- list()
   urls$grdi <- "https://raw.githubusercontent.com/cidgoh/pathogen-genomics-package/main/templates/grdi/schema.yaml"
@@ -9,7 +9,7 @@ schema_urls <- function(){
 
 #' Download a schema file from a url
 #' 
-#' @keywords internal
+#' @keywords internal, parsing
 download_schema <- function(yaml_url){
   file <- tempfile()
   download.file(url = yaml_url, destfile = file, method = "wget",  extra = "-4")
@@ -20,7 +20,8 @@ download_schema <- function(yaml_url){
 #' 
 #' @param file The path to the yaml schema file
 #' @returns A schema file -> really just a parsed YAML loaded into R.
-#' @keywords internal
+#' @keywords internal, parsing
+#' @export
 load_schema <- function(file){
   schema <- yaml::yaml.load_file(file)
   return(schema)
@@ -30,7 +31,9 @@ load_schema <- function(file){
 #' 
 #' Get the slots (or columns) of a schema
 #' 
+#' @keywords internal, parsing
 #' @param schema A schema file returned from [load_schema]
+#' @keywords internal, parsing
 slot_names <- function(schema){
   return(names(schema$slots))
 }
@@ -41,6 +44,7 @@ slot_names <- function(schema){
 #' @param slots A vector of slots
 #' 
 #' @return A named list of the slots with their category
+#' @keywords internal, parsing
 get_category <- function(schema, slots){
   check_slots_in_schema(schema,slots)
   usage <- schema$classes[[2]]$slot_usage
@@ -52,6 +56,7 @@ get_category <- function(schema, slots){
 #' @inheritParams slot_names
 #' 
 #' @returns a vector of the categories of the schema
+#' @keywords internal, parsing
 categories <- function(schema){
   unique(get_category(schema, slots = slot_names(schema)))
 }
@@ -62,6 +67,7 @@ categories <- function(schema){
 #' @param category A single category
 #' 
 #' @returns a vector of the slots that belong to the category
+#' @keywords internal, parsing
 get_slots_per_cat <- function(schema, category){
   if ( !all(category %in% categories(schema)) ){
     stop("supplied category not found in schema")
@@ -72,14 +78,14 @@ get_slots_per_cat <- function(schema, category){
   return(x)
 }
 
-#' Retreive the ranges of a slot
+#' Retrieve the ranges of a slot
 #' 
 #' Returns the 'range' value of a slot.
 #' 
 #' @inheritParams slot_names
 #' @param slot A name of a single slot
 #' @returns A vector of the range names
-#' @keywords internal
+#' @keywords internal, parsing
 slot_ranges <- function(schema, slot){
   check_slots_in_schema(schema,slot)
   slots <- schema$slots
@@ -98,7 +104,7 @@ slot_ranges <- function(schema, slot){
 #' @param ranges A list of ranges, returned from [slot_ranges]
 #' 
 #' @returns A vector of permissible values for each range, NULL if none exist
-#' @keywords internal
+#' @keywords internal, parsing
 get_menu_values <- function(schema, ranges){
   x <- sapply(ranges, function(x) names(schema$enums[[x]]$permissible_values))
   return(x)
@@ -126,7 +132,7 @@ get_permissible_values <- function(schema, slot){
 #' 
 #' @inheritParams get_menu_values
 #' @return The importance of the field
-#' @keywords internal
+#' @keywords internal, parsing
 get_field_importance <- function(schema, slot){
   check_slots_in_schema(schema,slot)
   slots <- schema$slots
@@ -145,7 +151,7 @@ get_field_importance <- function(schema, slot){
 #' 
 #' @inheritParams slot_names
 #' @return A named list of the slots and their enums
-#' @keywords internal
+#' @keywords internal, parsing
 all_enums_per_col <- function(schema){
   cols <- names(schema$slots)
   # Remove AMR slots, but only if they are present.
@@ -226,6 +232,14 @@ get_pattern <- function(schema, slots){
     return(x)
 }
 
+#' Get the type of the slot
+#'
+#' Get the type of the slot, inferred from the 'range' value when 'Menu' items are removed. 
+#' If all the 'Menu' items are removed, it must be a menu type so return that instead.
+#' 
+#' @inheritParams get_menu_values
+#' @returns The type of the slot
+#' @keywords internal, parsing
 get_slot_type <- function(schema, slot){
   r <- slot_ranges(pnc, slot)
   slot_type <- r[!grepl(pattern = 'Menu$', x=r)]
@@ -233,6 +247,11 @@ get_slot_type <- function(schema, slot){
   return(slot_type)
 }
 
+#' Determine if the slots are identifier columns.
+#' 
+#' @inheritParams get_category
+#' @returns Logical vector, TRUE if idendifier, FALSE if not.
+#' @keywords internal, parsing
 is_identifier <- function(schema, slots){
   x <- sapply(slots, 
               function(x){ id <- schema$slots[[x]]$identifier
@@ -240,6 +259,16 @@ is_identifier <- function(schema, slots){
   return(x)
 }
 
+#' Get the date range of a slot
+#'
+#' This returns the acceptable date range of a date slot. 
+#' Slot date ranges appear to be coded in a strange 'todo' section of the slot.
+#' Parse this section (will likely error if not present) into a lubridate interval.
+#' A '{today}' value is parsed as the current date. 
+#' 
+#' @inheritParams slot_ranges
+#' @returns A [lubridate::interval] of the acceptable date range.
+#' @keywords internal, parsing
 get_date_range_as_interval <- function(schema, slot){
   x <- schema$slots[[slot]]$todos
   min_val <- lubridate::ymd(x[1])
