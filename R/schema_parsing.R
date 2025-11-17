@@ -225,3 +225,29 @@ get_pattern <- function(schema, slots){
     x <- sapply(x    , function(x) if (is.null(x)) return(NA) else return(x))
     return(x)
 }
+
+get_slot_type <- function(schema, slot){
+  r <- slot_ranges(pnc, slot)
+  slot_type <- r[!grepl(pattern = 'Menu$', x=r)]
+  if (length(slot_type) == 0) slot_type <- 'Menu'
+  return(slot_type)
+}
+
+is_identifier <- function(schema, slots){
+  x <- sapply(slots, 
+              function(x){ id <- schema$slots[[x]]$identifier
+                           if (!is.null(id)) return(TRUE) else return(FALSE)})
+  return(x)
+}
+
+get_date_range_as_interval <- function(schema, slot){
+  x <- schema$slots[[slot]]$todos
+  min_val <- lubridate::ymd(x[1])
+  if (x[2] == "<={today}"){ 
+    max_val <- lubridate::today()  
+  } else { 
+    max_val <- lubridate::ymd(x[2]) 
+  }
+  date_interval <- lubridate::interval(start = min_val, max_val)
+  return(date_interval)
+}
