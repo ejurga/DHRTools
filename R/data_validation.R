@@ -44,6 +44,7 @@ validate <- function(schema, data){
 #'   The dataframe should have a column with the same name as the slot, but if it doesn't the 
 #'   function will exit
 #' @returns Nothing, but prints a log of validation successes and failures.
+#' @importFrom lubridate %within%
 #' @keywords internal, validation
 validate_slot_with_data <- function(schema, slot, data){
   
