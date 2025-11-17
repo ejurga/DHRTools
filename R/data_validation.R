@@ -16,15 +16,20 @@
 #' @keywords validation
 #' @export
 validate <- function(schema, data){
-  
+ 
+  cat("Checking data column names against dataframe\n")
+  cat("--------\n")
   missing <- get_missing_schema_cols(schema, data)
  
-  slots <- slot_names(schema) 
+  slots <- slot_names(schema)
   slots_to_process <- slots[!slots %in% missing]
-   
+  
+  cat("\n")
+  cat("Validating columns\n")
+  cat("-------\n")
   for (slot in slots_to_process){
-    validate_slot_with_data(schema,  
-                            slot = slot, 
+    validate_slot_with_data(schema,
+                            slot = slot,
                             data = df)
   }
 }
