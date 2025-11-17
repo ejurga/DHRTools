@@ -2,7 +2,6 @@
 #'
 #' Rerturn a vector to filter out AMR columns
 #'
-#' @export
 amr_regexes <-function(){
     c("_resistance_phenotype$",
       "_measurement(_units|_sign){0,1}$",
