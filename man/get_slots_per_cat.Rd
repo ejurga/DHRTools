@@ -17,3 +17,5 @@ a vector of the slots that belong to the category
 \description{
 Get all the slots that belong to the supplied category
 }
+\keyword{internal,}
+\keyword{parsing}

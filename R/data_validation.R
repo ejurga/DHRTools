@@ -194,8 +194,8 @@ is_decimal <- function(x){
 
 #' Test for missing schema columns in the data
 #' 
-#' @schema The schema
-#' @data Dataframe to test
+#' @param schema The schema
+#' @param data Dataframe to test
 #' @returns Nothing, but prints a log of columns that are missing in the dataframe
 #' @keywords internal, validation
 get_missing_schema_cols <- function(schema, data){

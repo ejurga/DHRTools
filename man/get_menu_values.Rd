@@ -2,20 +2,21 @@
 % Please edit documentation in R/schema_parsing.R
 \name{get_menu_values}
 \alias{get_menu_values}
-\title{Get the permissible values of a slot}
+\title{Get the permissible values of a range, if they exist}
 \usage{
-get_menu_values(schema, slot)
+get_menu_values(schema, ranges)
 }
 \arguments{
 \item{schema}{A schema file returned from \link{load_schema}}
 
-\item{slot}{A name of a single slot}
+\item{ranges}{A list of ranges, returned from \link{slot_ranges}}
 }
 \value{
-A vector of permissible values for the slot
+A vector of permissible values for each range, NULL if none exist
 }
 \description{
-Some slots are restricted to a picklist.
-Get the permissible values of the slot
+All slots have ranges. Some of these ranges have values
+Get the permissible values of each range,
 }
-\keyword{internal}
+\keyword{internal,}
+\keyword{parsing}

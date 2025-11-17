@@ -12,3 +12,5 @@ slot_names(schema)
 \description{
 Get the slots (or columns) of a schema
 }
+\keyword{internal,}
+\keyword{parsing}

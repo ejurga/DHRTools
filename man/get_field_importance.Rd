@@ -8,8 +8,6 @@ get_field_importance(schema, slot)
 }
 \arguments{
 \item{schema}{A schema file returned from \link{load_schema}}
-
-\item{slot}{A name of a single slot}
 }
 \value{
 The importance of the field
@@ -18,4 +16,5 @@ The importance of the field
 The standards often define the importance of a slot.
 Retrieve this for a single slot.
 }
-\keyword{internal}
+\keyword{internal,}
+\keyword{parsing}

@@ -2,7 +2,7 @@
 % Please edit documentation in R/schema_parsing.R
 \name{slot_ranges}
 \alias{slot_ranges}
-\title{Retreive the ranges of a slot}
+\title{Retrieve the ranges of a slot}
 \usage{
 slot_ranges(schema, slot)
 }
@@ -17,4 +17,5 @@ A vector of the range names
 \description{
 Returns the 'range' value of a slot.
 }
-\keyword{internal}
+\keyword{internal,}
+\keyword{parsing}

@@ -14,5 +14,7 @@ A named vector of all ontology terms from columns with menus, where
 the name of each value is the specification field it belongs to.
 }
 \description{
-Get a list of all the ontology terms used in the standard.
+This function retrieves a list of all the enums (terms) used in a standard,
+returned as a named list. Organisational terms and nulls are removed from
+this list, for ease of searching through them
 }

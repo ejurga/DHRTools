@@ -15,3 +15,5 @@ a vector of the categories of the schema
 \description{
 Get the categories that the schema uses to group its slots
 }
+\keyword{internal,}
+\keyword{parsing}

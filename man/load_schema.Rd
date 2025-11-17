@@ -15,4 +15,5 @@ A schema file -> really just a parsed YAML loaded into R.
 \description{
 Load a schema file
 }
-\keyword{internal}
+\keyword{internal,}
+\keyword{parsing}

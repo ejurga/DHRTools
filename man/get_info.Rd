@@ -8,8 +8,6 @@ get_info(schema, slot)
 }
 \arguments{
 \item{schema}{A schema file returned from \link{load_schema}}
-
-\item{slot}{A name of a single slot}
 }
 \description{
 Return the description and comments tags of a GRDI field

@@ -9,4 +9,5 @@ download_schema(yaml_url)
 \description{
 Download a schema file from a url
 }
-\keyword{internal}
+\keyword{internal,}
+\keyword{parsing}
