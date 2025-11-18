@@ -1,5 +1,3 @@
-require(tidyverse)
-
 #' Internal: compare a single field and return decrepancies.
 #'
 #' Used in [compare_lookup_tables]
@@ -29,7 +27,6 @@ compare_one_lookup_field <- function(df, field){
 #' GRDI standard, from the Master excel sheet, the DataHarmonizer YAML,
 #' and the Excel template
 #'
-#' @export
 get_terms_from_excel_and_yaml_sources <- function(){
 
   data("terms_from_master_sheet")
@@ -72,7 +69,6 @@ get_terms_from_excel_and_yaml_sources <- function(){
 #'
 #' @return A dataframe of discrepancies.
 #'
-#' @export
 compare_lookup_tables <- function(){
 
   df <- get_terms_from_excel_and_yaml_sources()
@@ -117,7 +113,6 @@ norun <- function(){
 #'
 #' @return A dataframe of ontology terms and the tables they are found in
 #'
-#' @export
 test_for_term_descrepancies <- function(){
   res <-
     get_terms_from_excel_and_yaml_sources() %>%
@@ -131,7 +126,6 @@ test_for_term_descrepancies <- function(){
 
 #' Get ontology values from the excel sheet.
 #'
-#' @export
 excel_lookup_values <- function(template_file){
 
   #Get the version
