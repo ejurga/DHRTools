@@ -1,3 +1,15 @@
+
+#' Simply log an error and call the slot name! 
+#' 
+#' @param slot the name of the slot!
+log_error <- function(slot, ...){
+  cat(crayon::red("FAILURE"), " on ", slot, ": ", ..., "\n", sep = "")
+}
+
+log_warning <- function(slot, ...){
+  cat(crayon::yellow("Warning"), " on ", slot, ": ", ..., "\n", sep = "")
+}
+
 #' Print out values that failed validation
 #'
 #' @param x Logical vector indicating pass/fail of validation
@@ -11,16 +23,18 @@ log_failures <- function(x, data){
   cat("Rows:", which(!x),'\n')
 }
 
-log_successes <- function(data, type){
-
-  cat(crayon::green("PASS"), " for type", type, "\n")
-  if (type == 'Menu'){
-    df <- as.data.frame(table(data))
-    colnames(df) <- c("Value", "N")
-    df <- dplyr::arrange(df, dplyr::desc(N))
-    print(knitr::kable(df))
-  } else {
-    cat("Must implement for", type)
+log_success <- function(slot, data, type, log = "all"){
+  
+  if (log=="all"){
+    cat(crayon::green("PASS"), "on column", slot, "for type", type, "\n")
+    if (type == 'Menu'){
+      df <- as.data.frame(table(data))
+      colnames(df) <- c("Value", "N")
+      df <- dplyr::arrange(df, dplyr::desc(N))
+      print(knitr::kable(df))
+    } else {
+      cat("Must implement for", type)
+    }
   }
 }
 
@@ -31,12 +45,11 @@ log_successes <- function(data, type){
 #' @param data the vector of data that was validated
 #' @keywords internal, validation
 #' @returns Nothing, but prints out if validation succeeded or failed.
-log_basic_validation <- function(x, type, data){
+log_basic_validation <- function(x, slot, type, data, log){
   if (all(x)){
-    log_successes(data, type)
+    log_success(slot, data, type, log)
   } else {
-    cat(crayon::red("FAILED"), " validation for type", type, "\n")
+    log_error(slot)
     log_failures(x=x, data=data)
   } 
-  cat("\n")
 }

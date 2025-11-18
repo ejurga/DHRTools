@@ -15,7 +15,9 @@
 #' @returns Nothing, but prints a log of validation passes and failures.
 #' @keywords validation
 #' @export
-validate <- function(schema, data){
+validate <- function(schema, data, log = c("all", "errors")){
+  
+  log <- match.arg(log)
  
   cat("Checking data column names against dataframe\n")
   cat("--------\n")
@@ -30,7 +32,8 @@ validate <- function(schema, data){
   for (slot in slots_to_process){
     validate_slot_with_data(schema,
                             slot = slot,
-                            data = df)
+                            data = df, 
+                            log = log)
   }
 }
 
@@ -46,35 +49,36 @@ validate <- function(schema, data){
 #' @returns Nothing, but prints a log of validation successes and failures.
 #' @importFrom lubridate %within%
 #' @keywords internal, validation
-validate_slot_with_data <- function(schema, slot, data){
+validate_slot_with_data <- function(schema, slot, data, log){
   
-  cat("Slot ", slot, ": ", sep = "")
   x <- data[[slot]]
-  # Check is the slot is present in the data
-  if (is.null(x)){
-    cat("No data. Skipping\n")
-    return(NULL)
-  }
-  # Check if the data is all empty!
-  if (all(is.na(x))){
-    cat("Data is all blank/empty! Skipping\n")
-    return(NULL)
-  }
   
   # If any NA in a required column, send a warning. 
   importance <- get_field_importance(schema, slot)
   if (anyNA(x)){
-    if (importance == 'required')     cat("\n", crayon::red("FAILURE"), "NA values in required slot \n Rows: ",   paste0(which(is.na(x)), collapse = ", "), "\n")
+    if (importance == 'required') log_error(slot, "NA values in required slot \n Rows: ", paste0(which(is.na(x)), collapse = ", "))
     #if (importance == 'recommended') cat("\n WARNING: NA values in recommended slot \nRows: ", paste0(which(is.na(x)), collapse = ", "), "\n")
+  }
+  
+  # Check is the slot is present in the data
+  if (is.null(x)){
+    log_warning(slot, "No data. Skipping")
+    return(NULL)
+  }
+  # Check if the data is all empty!
+  if (all(is.na(x))){
+    log_warning(slot, "Data is all blank/empty! Skipping")
+    return(NULL)
   }
   
   # Check if this is an identifier column -> if so, check for duplicates:
   if (is_identifier(schema, slot)){
     if (any(duplicated(x))){
-      cat("\n", crayon::red("FAILURE:"), "Duplicate values in identifier column")
+      log_error(slot, "Duplicate values in identifier column")
       cat("  Duplicated values:", paste0(x[duplicated(x)], collapse = ", "), "\n")
     } else {
-      cat("\n  PASS: No duplicates in identifier column\n") }
+      log_success(slot, data, type, log)
+    }
   }
 
   type     <- get_slot_type(schema, slot)
@@ -82,19 +86,19 @@ validate_slot_with_data <- function(schema, slot, data){
  
   if (type == 'date'   ){ 
     is_validated <- is_date(x)    | is_value 
-    log_basic_validation(x = is_validated, type = type, data = x)
-    log_basic_validation(x = check_whitespace(x), type = "date: check trailing whitespace", data = x) 
+    log_basic_validation(x = is_validated, slot = slot, type = type, data = x, log = log)
+    log_basic_validation(x = check_whitespace(x), slot = slot, type = "date: check trailing whitespace", data = x, log = log)
     # Check that the dates are right!
     time_range <- get_date_range_as_interval(schema, slot)
     dates <- suppressWarnings(lubridate::ymd(x))
     if (all(is.na(dates))){
-      cat("No dates parsed (none provided?) -> skipping range validation\n")
+      log_warning(slot, "No dates parsed (none provided?) -> skipping range validation")
     } else {
       within_range <- dates %within% time_range
       if (all(within_range, na.rm = T)){
         cat("PASS: all dates within bounds\n")
       } else {
-        cat(crayon::red("ERROR:"), "date out of bounds!\n") 
+        log_error(slot, "date out of bounds.")
         off <- dates[!within_range]
         off <- off[!is.na(off)]
         cat("Offending values:", paste0(off, collapse = ", "), "\n")
@@ -102,20 +106,20 @@ validate_slot_with_data <- function(schema, slot, data){
     }
   } else if (type == 'decimal'){ 
     is_validated <- is_decimal(x) | is_value 
-    log_basic_validation(x = is_validated, type = type, data = x)
-    log_basic_validation(x = check_whitespace(x), type = "decimal, check trailing whitespace", data = x) 
+    log_basic_validation(x = is_validated, slot = slot, type = type, data = x, log = log)
+    log_basic_validation(x = check_whitespace(x), slot = slot, type = "decimal, check trailing whitespace", data = x, log = log) 
   } else if (type == 'Menu'){ 
     is_validated <- is_value                 
-    log_basic_validation(x = is_validated, type = type, data = x)
+    log_basic_validation(x = is_validated, slot = slot, type = type, data = x, log = log)
   } else if (type == 'WhitespaceMinimizedString'){ 
     rgx <- get_pattern(schema, slot = slot)
     if (!is.na(rgx)){ 
-      validate_rgx(rgx = rgx, data = x)
+      validate_rgx(rgx = rgx, slot = slot, data = x, log = log)
     } else {
-      cat("Type 'WhiteSpaceMinimized' no pattern: no validation attempted\n")
+      log_warning(slot, "Type 'WhiteSpaceMinimized' no pattern: no validation attempted")
     }
   } else if (type == 'Provenance') {
-      cat("Type: Provenance, skipping")
+      log_warning(slot, "Type: Provenance, skipping")
   } else { stop("Unhandled type:", type)}
 }
 
@@ -128,11 +132,10 @@ validate_slot_with_data <- function(schema, slot, data){
 #' @param data A vector of strings to test the expression on
 #' @returns Nothing, but logs 
 #' @keywords internal, validation
-validate_rgx <- function(rgx, data){
-  is.na(data)
-  cat("RGX validation: ", sum(is.na(data)), "Empty values, testing remainder", "\n")
+validate_rgx <- function(rgx, slot, data, log){
+  if (any(is.na(data))) log_warning(slot, "RGX validation: ", sum(is.na(data)), "Empty values, testing remainder")
   is_pattern <- grepl(pattern = rgx, data[!is.na(data)], perl = T)
-  log_basic_validation(x = is_pattern, type = 'String with Regex', data = data)
+  log_basic_validation(x = is_pattern, slot = slot, type = 'String with Regex', data = data, log = log)
 } 
 
 #' Return TRUE if x matches val OR is NA!
