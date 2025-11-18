@@ -7,9 +7,13 @@
 validate_values(schema, slot, x)
 }
 \value{
-Logical vector
+Logical vector TRUE if passed validation, FALSE if not
 }
 \description{
+Validate the values against the list of permissible values of the slot.
+If the slot is a multivalued slot, split based on ';' delimiter, and return FALSE if ANY of the values do not match.
+}
+\details{
 Note: This will return TRUE if the value is NA! We should catch this
 seperately.
 }
