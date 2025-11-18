@@ -64,14 +64,14 @@ validate_slot_with_data <- function(schema, slot, data){
   # If any NA in a required column, send a warning. 
   importance <- get_field_importance(schema, slot)
   if (anyNA(x)){
-    if (importance == 'required')    cat("\n FAILURE: NA values in required slot \n")
-    if (importance == 'recommended') cat("\n WARNING: NA values in recommended slot \n")
+    if (importance == 'required')     cat("\n", crayon::red("FAILURE"), "NA values in required slot \n Rows: ",   paste0(which(is.na(x)), collapse = ", "), "\n")
+    #if (importance == 'recommended') cat("\n WARNING: NA values in recommended slot \nRows: ", paste0(which(is.na(x)), collapse = ", "), "\n")
   }
   
   # Check if this is an identifier column -> if so, check for duplicates:
   if (is_identifier(schema, slot)){
     if (any(duplicated(x))){
-      cat("\n FAILURE: Duplicate values in identifier column")
+      cat("\n", crayon::red("FAILURE:"), "Duplicate values in identifier column")
       cat("  Duplicated values:", paste0(x[duplicated(x)], collapse = ", "), "\n")
     } else {
       cat("\n  PASS: No duplicates in identifier column\n") }
@@ -94,10 +94,10 @@ validate_slot_with_data <- function(schema, slot, data){
       if (all(within_range, na.rm = T)){
         cat("PASS: all dates within bounds\n")
       } else {
-        cat("ERROR: date out of bounds!\n") 
+        cat(crayon::red("ERROR:"), "date out of bounds!\n") 
         off <- dates[!within_range]
         off <- off[!is.na(off)]
-        cat("Offending values:", paste0(off, collapse = ", "))
+        cat("Offending values:", paste0(off, collapse = ", "), "\n")
       }
     }
   } else if (type == 'decimal'){ 
@@ -144,7 +144,7 @@ log_basic_validation <- function(x, type, data){
   if (all(x)){
     cat("   PASSED for type", type)
   } else {
-    cat("   FAILED validation for type", type, "\n")
+    cat(crayon::red("FAILED"), " validation for type", type, "\n")
     log_failures(x=x, data=data)
   } 
   cat("\n")
