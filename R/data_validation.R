@@ -130,6 +130,7 @@ log_failures <- function(x, data){
   tab <- table(data[!x])
   offenders <- paste0(names(tab), ' (', unname(tab), ')')
   cat("Offending values:", paste0(offenders, collapse = ', '), '\n')
+  cat("Rows:", which(!x),'\n')
 }
 
 #' Print out if validation passed or failed 
