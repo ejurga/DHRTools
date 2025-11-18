@@ -119,37 +119,6 @@ validate_slot_with_data <- function(schema, slot, data){
   } else { stop("Unhandled type:", type)}
 }
 
-
-#' Print out values that failed validation
-#'
-#' @param x Logical vector indicating pass/fail of validation
-#' @param data The values that were validated -> used for printing out offending values
-#' @keywords internal, validation
-#' @returns Nothing, but prints out the offending values that failed validation
-log_failures <- function(x, data){
-  tab <- table(data[!x])
-  offenders <- paste0(names(tab), ' (', unname(tab), ')')
-  cat("Offending values:", paste0(offenders, collapse = ', '), '\n')
-  cat("Rows:", which(!x),'\n')
-}
-
-#' Print out if validation passed or failed 
-#' 
-#' @param x Logical vector indication pass/fail of validation
-#' @param type The 'type' of the slot, returned from [get_slot_type]
-#' @param data the vector of data that was validated
-#' @keywords internal, validation
-#' @returns Nothing, but prints out if validation succeeded or failed.
-log_basic_validation <- function(x, type, data){
-  if (all(x)){
-    cat("   PASSED for type", type)
-  } else {
-    cat(crayon::red("FAILED"), " validation for type", type, "\n")
-    log_failures(x=x, data=data)
-  } 
-  cat("\n")
-}
-
 #' Validate a string bassed on supplied regex.
 #' 
 #' This function takes a regular expression and tests the supplied data with 
@@ -161,7 +130,7 @@ log_basic_validation <- function(x, type, data){
 #' @keywords internal, validation
 validate_rgx <- function(rgx, data){
   is.na(data)
-  cat("RGX validation: ", sum(is.na(data)), "Empty values, testing remainder")
+  cat("RGX validation: ", sum(is.na(data)), "Empty values, testing remainder", "\n")
   is_pattern <- grepl(pattern = rgx, data[!is.na(data)], perl = T)
   log_basic_validation(x = is_pattern, type = 'String with Regex', data = data)
 } 
