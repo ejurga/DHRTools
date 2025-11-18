@@ -259,6 +259,14 @@ is_identifier <- function(schema, slots){
   return(x)
 }
 
+#' Check if the slots are multivalued
+#' 
+#' @inheritParams get_category
+#' @returns Logical vector, TRUE if the list is multivalued, FALSE if not.
+check_multivalues <- function(schema, slots){
+  return(sapply(slots, function(x) if (!is.null(schema$slots[[x]]$multivalued)) TRUE else FALSE))
+}
+
 #' Get the date range of a slot
 #'
 #' This returns the acceptable date range of a date slot. 
