@@ -82,7 +82,8 @@ validate_slot_with_data <- function(schema, slot, data){
  
   if (type == 'date'   ){ 
     is_validated <- is_date(x)    | is_value 
-    log_basic_validation(x = is_validated, type = type, data = x) 
+    log_basic_validation(x = is_validated, type = type, data = x)
+    log_basic_validation(x = check_whitespace(x), type = "date: check trailing whitespace", data = x) 
     # Check that the dates are right!
     time_range <- get_date_range_as_interval(schema, slot)
     dates <- suppressWarnings(lubridate::ymd(x))
@@ -102,6 +103,7 @@ validate_slot_with_data <- function(schema, slot, data){
   } else if (type == 'decimal'){ 
     is_validated <- is_decimal(x) | is_value 
     log_basic_validation(x = is_validated, type = type, data = x)
+    log_basic_validation(x = check_whitespace(x), type = "decimal, check trailing whitespace", data = x) 
   } else if (type == 'Menu'){ 
     is_validated <- is_value                 
     log_basic_validation(x = is_validated, type = type, data = x)
