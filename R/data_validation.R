@@ -184,6 +184,10 @@ is_date <- function(x){
   !is.na(suppressWarnings(as.Date(x, format = "%Y-%m-%d")))
 }
 
+check_whitespace <- function(data){
+  !grepl(x=data, "(^[ ]{1,}|[ ]{1,}$)")
+}
+
 #' Are the values decimals?
 #' 
 #' @param x A vextor of strings to test.
