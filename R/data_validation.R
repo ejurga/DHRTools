@@ -166,16 +166,37 @@ validate_rgx <- function(rgx, data){
   log_basic_validation(x = is_pattern, type = 'String with Regex', data = data)
 } 
 
+#' Return TRUE if x matches val OR is NA!
+#' 
+#' Converts both input values and permissible values to lowercase 
+#' 
+#' @param x a vector
+#' @param vals values to match against
+#' @returns Logical vector
+is_permissible_value <- function(x, vals){
+  return(tolower(x) %in% tolower(vals) | is.na(x))
+}
+
 #' Validate data against permissible values
+#' 
+#' Validate the values against the list of permissible values of the slot. 
+#' If the slot is a multivalued slot, split based on ';' delimiter, and return FALSE if ANY of the values do not match.
 #' 
 #' Note: This will return TRUE if the value is NA! We should catch this
 #' seperately.
 #' 
-#' @return Logical vector
+#' @return Logical vector TRUE if passed validation, FALSE if not
 #' @keywords internal, validation
 validate_values <- function(schema, slot, x){
     vals <- get_permissible_values(schema, slot)
-    return(x %in% vals | is.na(x))
+    if (check_multivalues(schema, slot)){
+      x_split <- strsplit(x, split = "; {0,1}")
+      x_val   <- sapply(x_split, is_permissible_value, vals = vals)
+      is_val  <- sapply(x_val, function(x) !any(!x))
+    } else {
+      is_val <- is_permissible_value(x, vals)
+    }
+    return(is_val)
 }
 
 #' Are the values expressed in Year-Month-Date format?
@@ -184,7 +205,7 @@ validate_values <- function(schema, slot, x){
 #' @returns Logical vector indicating if the string could be coerced to date format
 #' @keywords internal, validation
 is_date <- function(x){
-  !is.na(suppressWarnings(as.Date(x, format = "%Y-%m-%d")))
+  !is.na(suppressWarnings(lubridate::ymd(x)))
 }
 
 check_whitespace <- function(data){
