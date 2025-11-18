@@ -4,7 +4,7 @@
 \alias{validate}
 \title{Validate a dataframe based on the supplied schema.}
 \usage{
-validate(schema, data)
+validate(schema, data, log = c("all", "errors"))
 }
 \arguments{
 \item{schema}{the data schema to use}

@@ -4,7 +4,7 @@
 \alias{validate_slot_with_data}
 \title{Validate a column of data using slot parameters}
 \usage{
-validate_slot_with_data(schema, slot, data)
+validate_slot_with_data(schema, slot, data, log)
 }
 \arguments{
 \item{schema}{the data schema}
