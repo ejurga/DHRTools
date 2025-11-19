@@ -4,7 +4,7 @@
 \alias{validate_rgx}
 \title{Validate a string bassed on supplied regex.}
 \usage{
-validate_rgx(rgx, slot, data, log)
+validate_rgx(rgx, slot, data)
 }
 \arguments{
 \item{rgx}{Regular Expression to test on the data}
