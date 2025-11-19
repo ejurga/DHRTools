@@ -7,7 +7,15 @@ log_error <- function(slot, ...){
 }
 
 log_warning <- function(slot, ...){
-  cat(crayon::yellow("Warning"), " on ", slot, ": ", ..., "\n", sep = "")
+  if (getOption("DHRtools.loglevel") %in% c("all", "warnings")){
+    cat(crayon::yellow("Warning"), " on ", slot, ": ", ..., "\n", sep = "")
+  }
+}
+
+log_pass <- function(slot, ...){
+  if (getOption("DHRtools.loglevel")=="all"){
+    cat(crayon::green("Pass"), " on ", slot, ": ", ..., "\n", sep = "")
+  }
 }
 
 #' Print out values that failed validation
@@ -23,10 +31,10 @@ log_failures <- function(x, data){
   cat("Rows:", which(!x),'\n')
 }
 
-log_success <- function(slot, data, type, log = "all"){
+log_success <- function(slot, data, type){
   
-  if (log=="all"){
-    cat(crayon::green("PASS"), "on column", slot, "for type", type, "\n")
+  if (getOption("DHRtools.loglevel")=="all"){
+    log_pass(slot)
     if (type == 'Menu'){
       df <- as.data.frame(table(data))
       colnames(df) <- c("Value", "N")
@@ -45,11 +53,11 @@ log_success <- function(slot, data, type, log = "all"){
 #' @param data the vector of data that was validated
 #' @keywords internal, validation
 #' @returns Nothing, but prints out if validation succeeded or failed.
-log_basic_validation <- function(x, slot, type, data, log){
+log_basic_validation <- function(x, slot, type, data, ...){
   if (all(x)){
-    log_success(slot, data, type, log)
+    log_success(slot, data, type)
   } else {
-    log_error(slot)
+    log_error(slot, ...)
     log_failures(x=x, data=data)
   } 
 }

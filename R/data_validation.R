@@ -15,9 +15,12 @@
 #' @returns Nothing, but prints a log of validation passes and failures.
 #' @keywords validation
 #' @export
-validate <- function(schema, data, log = c("all", "errors")){
-  
-  log <- match.arg(log)
+validate <- function(schema, data, loglevel = c("all", "warnings", "errors")){
+
+  # Set loglevel option, I prefer this over passing the loglevel to all the 
+  # functions.  
+  loglevel <- match.arg(loglevel)
+  options(DHRtools.loglevel = loglevel)
  
   cat("Checking data column names against dataframe\n")
   cat("--------\n")
@@ -32,8 +35,7 @@ validate <- function(schema, data, log = c("all", "errors")){
   for (slot in slots_to_process){
     validate_slot_with_data(schema,
                             slot = slot,
-                            data = df, 
-                            log = log)
+                            data = data)
   }
 }
 
@@ -49,7 +51,7 @@ validate <- function(schema, data, log = c("all", "errors")){
 #' @returns Nothing, but prints a log of validation successes and failures.
 #' @importFrom lubridate %within%
 #' @keywords internal, validation
-validate_slot_with_data <- function(schema, slot, data, log){
+validate_slot_with_data <- function(schema, slot, data){
   
   x <- data[[slot]]
   
@@ -71,23 +73,23 @@ validate_slot_with_data <- function(schema, slot, data, log){
     return(NULL)
   }
   
+  type     <- get_slot_type(schema, slot)
   # Check if this is an identifier column -> if so, check for duplicates:
   if (is_identifier(schema, slot)){
     if (any(duplicated(x))){
       log_error(slot, "Duplicate values in identifier column")
       cat("  Duplicated values:", paste0(x[duplicated(x)], collapse = ", "), "\n")
     } else {
-      log_success(slot, data, type, log)
+      log_success(slot, data, type)
     }
   }
 
-  type     <- get_slot_type(schema, slot)
   is_value <- validate_values(schema,slot,x)
  
   if (type == 'date'   ){ 
     is_validated <- is_date(x)    | is_value 
-    log_basic_validation(x = is_validated, slot = slot, type = type, data = x, log = log)
-    log_basic_validation(x = check_whitespace(x), slot = slot, type = "date: check trailing whitespace", data = x, log = log)
+    log_basic_validation(x = is_validated, slot = slot, type = type, data = x, "date parsing failure")
+    log_basic_validation(x = check_whitespace(x), slot = slot, type = type, data = x, "whitespace detected")
     # Check that the dates are right!
     time_range <- get_date_range_as_interval(schema, slot)
     dates <- suppressWarnings(lubridate::ymd(x))
@@ -96,25 +98,26 @@ validate_slot_with_data <- function(schema, slot, data, log){
     } else {
       within_range <- dates %within% time_range
       if (all(within_range, na.rm = T)){
-        cat("PASS: all dates within bounds\n")
+        log_pass(slot, "All dates with bounds")
       } else {
         log_error(slot, "date out of bounds.")
         off <- dates[!within_range]
         off <- off[!is.na(off)]
         cat("Offending values:", paste0(off, collapse = ", "), "\n")
+        cat("Rows:", paste0(which(!within_range), collapse = ", "), "\n")
       }
     }
   } else if (type == 'decimal'){ 
     is_validated <- is_decimal(x) | is_value 
-    log_basic_validation(x = is_validated, slot = slot, type = type, data = x, log = log)
-    log_basic_validation(x = check_whitespace(x), slot = slot, type = "decimal, check trailing whitespace", data = x, log = log) 
+    log_basic_validation(x = is_validated, slot = slot, type = type, data = x)
+    log_basic_validation(x = check_whitespace(x), slot = slot, type = "decimal, check trailing whitespace", data = x) 
   } else if (type == 'Menu'){ 
     is_validated <- is_value                 
-    log_basic_validation(x = is_validated, slot = slot, type = type, data = x, log = log)
+    log_basic_validation(x = is_validated, slot = slot, type = type, data = x)
   } else if (type == 'WhitespaceMinimizedString'){ 
     rgx <- get_pattern(schema, slot = slot)
     if (!is.na(rgx)){ 
-      validate_rgx(rgx = rgx, slot = slot, data = x, log = log)
+      validate_rgx(rgx = rgx, slot = slot, data = x)
     } else {
       log_warning(slot, "Type 'WhiteSpaceMinimized' no pattern: no validation attempted")
     }
@@ -132,10 +135,10 @@ validate_slot_with_data <- function(schema, slot, data, log){
 #' @param data A vector of strings to test the expression on
 #' @returns Nothing, but logs 
 #' @keywords internal, validation
-validate_rgx <- function(rgx, slot, data, log){
+validate_rgx <- function(rgx, slot, data){
   if (any(is.na(data))) log_warning(slot, "RGX validation: ", sum(is.na(data)), "Empty values, testing remainder")
   is_pattern <- grepl(pattern = rgx, data[!is.na(data)], perl = T)
-  log_basic_validation(x = is_pattern, slot = slot, type = 'String with Regex', data = data, log = log)
+  log_basic_validation(x = is_pattern, slot = slot, type = 'String with Regex', data = data)
 } 
 
 #' Return TRUE if x matches val OR is NA!
