@@ -4,7 +4,7 @@
 \alias{log_basic_validation}
 \title{Print out if validation passed or failed}
 \usage{
-log_basic_validation(x, slot, type, data, log)
+log_basic_validation(x, slot, type, data, ...)
 }
 \arguments{
 \item{x}{Logical vector indication pass/fail of validation}

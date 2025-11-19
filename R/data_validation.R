@@ -204,8 +204,8 @@ is_decimal <- function(x){
 #' This function renames title slots to computer-friendly names.
 #' It will not rename slots that are not a part of the standard, and will return them.
 #' 
-#' @schema The data schema
-#' @data Dataframe, with title slots renamed.
+#' @param schema The data schema
+#' @param data Dataframe, with title slots renamed.
 #' @keywords validation
 #' @export 
 rename_title_to_cols <- function(schema, data){
