@@ -196,6 +196,55 @@ is_decimal <- function(x){
   !is.na(suppressWarnings(as.numeric(x)))
 }
 
+
+#' Rename Title columns to internal slot names
+#' 
+#' Schema slots have internal names (characters and underscores only) and "Titles", 
+#' which are human readable names and can contain characters that play poorly with internal code.
+#' This function renames title slots to computer-friendly names.
+#' It will not rename slots that are not a part of the standard, and will return them.
+#' 
+#' @param schema The data schema
+#' @param data Dataframe, with title slots renamed.
+#' @keywords validation
+#' @export 
+rename_title_to_cols <- function(schema, data){
+  n <- slot_names(schema)
+  t <- slot_titles(schema, slot_names(schema))
+  x <- match(colnames(data), t) 
+  not_na <- which(!is.na(x))
+  colnames(data)[not_na] <- n[x][not_na]
+  return(data)
+}
+
+#' Select only those columns that are found in the schema 
+#' 
+#' From a dataframe, select only those columns that are found in the schema. 
+#' Note: this function works with both "name" (underscores only) and "title" (human readable). 
+#' It also rearranges the columns to match the order of the slots of the schema.
+#' 
+#' @param schema the schema
+#' @param data dataframe to
+#' @param log TRUE/FALSE, whether to log the columns removed
+#' @returns A dataframe, with only the columns from the schema
+#' @keywords validation
+#' @export
+select_cols_of_schema <- function(schema, data, log = FALSE){
+  # Get slots and titles, and interlace them
+  s <- slot_names(schema)  
+  t <- slot_titles(schema, s)
+  x <- as.vector(rbind(s,t))
+  # Retrieve columns that are in the data
+  in_schema <- colnames(data) %in% x
+  if (log){
+    cat("Removing columns:", paste0(colnames(data)[!in_schema], collapse = ", "), "\n")
+  }
+  sel <- data[,in_schema]  
+  # Just reaarange according to slot order.
+  df <- data[,colnames(sel)[order(match(colnames(sel), x))]]
+  return(df)
+}
+
 #' Test for missing schema columns in the data
 #' 
 #' @param schema The schema
