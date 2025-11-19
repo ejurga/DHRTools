@@ -38,6 +38,12 @@ slot_names <- function(schema){
   return(names(schema$slots))
 }
 
+#' Get the list of slot titles 
+#' 
+slot_titles <- function(schema, slots){
+  unname(sapply(slots, function(x) schema$slots[[x]]$title))
+}
+
 #' Get the category of the slots
 #' 
 #' @inheritParams slot_names
