@@ -1,17 +1,23 @@
 
-#' Simply log an error and call the slot name! 
-#' 
+#' Simply log an error and call the slot name!
+#'
 #' @param slot the name of the slot!
+#' @inheritDotParams cat 
 log_error <- function(slot, ...){
   cat(crayon::red("FAILURE"), " on ", slot, ": ", ..., "\n", sep = "")
 }
 
+#' Log a warning
+#'
+#' @inheritParams log_error
 log_warning <- function(slot, ...){
   if (getOption("DHRtools.loglevel") %in% c("all", "warnings")){
     cat(crayon::yellow("Warning"), " on ", slot, ": ", ..., "\n", sep = "")
   }
 }
 
+#' Log a pass
+#'
 log_pass <- function(slot, ...){
   if (getOption("DHRtools.loglevel")=="all"){
     cat(crayon::green("Pass"), " on ", slot, ": ", ..., "\n", sep = "")
