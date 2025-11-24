@@ -294,3 +294,16 @@ get_date_range_as_interval <- function(schema, slot){
   date_interval <- lubridate::interval(start = min_val, max_val)
   return(date_interval)
 }
+
+#' Get the minimum and maximum value of a slot
+#' 
+#' @inheritParams slot_ranges
+#' @returns vector of length 2 (min,max), or NA if there is no range
+min_max_value <- function(schema, slot){
+  min <- schema$slots[[slot]]$minimum_value
+  max <- schema$slots[[slot]]$maximum_value
+  if (is.null(min)) min <- NA
+  if (is.null(max)) max <- NA
+  min_max <- as.numeric(c(min,max))
+  if (all(is.na(min_max))) return(NA) else return(min_max)
+}
