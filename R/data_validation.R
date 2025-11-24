@@ -58,8 +58,8 @@ validate_slot_with_data <- function(schema, slot, data){
   # If any NA in a required column, send a warning. 
   importance <- get_field_importance(schema, slot)
   if (anyNA(x)){
-    if (importance == 'required') log_error(slot, "NA values in required slot \n Rows: ", paste0(which(is.na(x)), collapse = ", "))
-    #if (importance == 'recommended') cat("\n WARNING: NA values in recommended slot \nRows: ", paste0(which(is.na(x)), collapse = ", "), "\n")
+    if (importance == 'required')    log_error(slot, "NA values in required slot \n Rows: ", paste0(which(is.na(x)), collapse = ", "))
+    if (importance == 'recommended') log_warning(slot, "NA values in recommended slot. Total empty values: ", sum(is.na(x)))
   }
   
   # Check is the slot is present in the data
@@ -80,41 +80,17 @@ validate_slot_with_data <- function(schema, slot, data){
       log_error(slot, "Duplicate values in identifier column")
       cat("  Duplicated values:", paste0(x[duplicated(x)], collapse = ", "), "\n")
     } else {
-      log_success(slot, data, type)
+      log_pass(slot, "No duplicates in identifier column")
     }
   }
-
-  is_value <- validate_values(schema,slot,x)
  
-  if (type == 'date'   ){ 
-    is_validated <- is_date(x)    | is_value 
-    log_basic_validation(x = is_validated, slot = slot, type = type, data = x, "date parsing failure")
-    log_basic_validation(x = check_whitespace(x), slot = slot, type = type, data = x, "whitespace detected")
-    # Check that the dates are right!
-    time_range <- get_date_range_as_interval(schema, slot)
-    dates <- suppressWarnings(lubridate::ymd(x))
-    if (all(is.na(dates))){
-      log_warning(slot, "No dates parsed (none provided?) -> skipping range validation")
-    } else {
-      within_range <- dates %within% time_range
-      if (all(within_range, na.rm = T)){
-        log_pass(slot, "All dates with bounds")
-      } else {
-        log_error(slot, "date out of bounds.")
-        off <- dates[!within_range]
-        off <- off[!is.na(off)]
-        cat("Offending values:", paste0(off, collapse = ", "), "\n")
-        cat("Rows:", paste0(which(!within_range), collapse = ", "), "\n")
-      }
-    }
-  } else if (type == 'decimal'){ 
-    is_validated <- is_decimal(x) | is_value 
-    log_basic_validation(x = is_validated, slot = slot, type = type, data = x)
-    log_basic_validation(x = check_whitespace(x), slot = slot, type = "decimal, check trailing whitespace", data = x) 
-  } else if (type == 'Menu'){ 
-    is_validated <- is_value                 
-    log_basic_validation(x = is_validated, slot = slot, type = type, data = x)
-  } else if (type == 'WhitespaceMinimizedString'){ 
+  if      ( type == 'date'    ){  validate_date_slot(   schema, slot, data = x) }
+  else if ( type == 'decimal' ){  validate_decimal_slot(schema, slot, data = x) }
+  else if ( type == 'Menu'    ){  log_basic_validation(x = validate_values(schema, slot, x = x),
+                                                    slot = slot, data = x,  
+                                            pass_message = "All values allowed",  
+                                            fail_message = "Values not found in picklist") }
+  else if ( type == 'WhitespaceMinimizedString'){ 
     rgx <- get_pattern(schema, slot = slot)
     if (!is.na(rgx)){ 
       validate_rgx(rgx = rgx, slot = slot, data = x)
@@ -126,6 +102,53 @@ validate_slot_with_data <- function(schema, slot, data){
   } else { stop("Unhandled type:", type)}
 }
 
+#' Validate a date-type slot
+#' 
+#' 
+validate_date_slot <- function(schema, slot, data){
+  # Check for date parsing
+  is_validated <- is_date(data) | validate_values(schema, slot, data)
+  log_basic_validation(x = is_validated, slot = slot, data = data, 
+                       pass_message = "All are either dates or null values", 
+                       fail_message = "Datetime parse fail")
+  # Check for whitespace.
+  is_white <- check_whitespace(data = data)
+  log_basic_validation(x = is_white, slot = slot, data = data,  
+                       pass_message = "No whitespace detected",  
+                       fail_message = "Whitespace detected")
+  # Check for date range
+  time_range <- get_date_range_as_interval(schema, slot)
+  dates <- suppressWarnings(lubridate::ymd(data))
+  within_range <- dates %within% time_range
+  log_basic_validation(x = within_range, slot = slot, data = data, 
+                       pass_message = "All dates within bounds",
+                       fail_message = "Dates out of bounds")
+}
+
+#' Validate decimal slot
+validate_decimal_slot <- function(schema, slot, data){
+  
+  # check for decimal parsing
+  is_validated <- is_decimal(data) | validate_values(schema,slot,data)
+  log_basic_validation(x = is_validated, slot = slot, data = data, 
+                       pass_message = "All values either decimal or null value", 
+                       fail_message = "Decimal values failed validation")
+  # check for whitspace
+  log_basic_validation(x = check_whitespace(data), slot = slot, data = data,
+                       pass_message = "No whitespace detected", 
+                       fail_message = "Whitespace detected")
+  # check for range
+  num_range <- min_max_value(schema, slot)
+  if (!all(is.na(num_range))){
+    nums <- suppressWarnings(as.numeric(data))
+    in_range <- nums <= max(num_range) & nums >= min(num_range)
+    log_basic_validation(x = in_range, slot = slot, data = data,
+                         pass_message = "All values within range", 
+                         fail_message = "Values out of range")
+  }
+}
+
+
 #' Validate a string bassed on supplied regex.
 #' 
 #' This function takes a regular expression and tests the supplied data with 
@@ -136,9 +159,11 @@ validate_slot_with_data <- function(schema, slot, data){
 #' @returns Nothing, but logs 
 #' @keywords internal, validation
 validate_rgx <- function(rgx, slot, data){
-  if (any(is.na(data))) log_warning(slot, "RGX validation: ", sum(is.na(data)), "Empty values, testing remainder")
+  if (any(is.na(data))) log_warning(slot, "RGX validation: ", sum(is.na(data)), " Empty values, testing remainder")
   is_pattern <- grepl(pattern = rgx, data[!is.na(data)], perl = T)
-  log_basic_validation(x = is_pattern, slot = slot, type = 'String with Regex', data = data)
+  log_basic_validation(x = is_pattern, slot = slot, data = data, 
+                       pass_message = "All values passed regex check", 
+                       fail_message = paste0("Failure parsing regex ", rgx))
 } 
 
 #' Return TRUE if x matches val OR is NA!
@@ -180,7 +205,8 @@ validate_values <- function(schema, slot, x){
 #' @returns Logical vector indicating if the string could be coerced to date format
 #' @keywords internal, validation
 is_date <- function(x){
-  !is.na(suppressWarnings(lubridate::ymd(x)))
+  #!is.na(suppressWarnings(lubridate::ymd(x)))
+  !is.na(suppressWarnings(as.Date(x, format = "%Y-%m-%d")))
 }
 
 check_whitespace <- function(data){
