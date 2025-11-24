@@ -53,17 +53,19 @@ log_success <- function(slot, data, type){
 }
 
 #' Print out if validation passed or failed 
-#' 
+#'
 #' @param x Logical vector indication pass/fail of validation
-#' @param type The 'type' of the slot, returned from [get_slot_type]
+#' @param slot slot name
 #' @param data the vector of data that was validated
+#' @param pass_message Message to send to [log_pass]
+#' @param fail_message Message to send to [log_error]
 #' @keywords internal, validation
 #' @returns Nothing, but prints out if validation succeeded or failed.
-log_basic_validation <- function(x, slot, type, data, ...){
-  if (all(x)){
-    log_success(slot, data, type)
+log_basic_validation <- function(x, slot, data, pass_message, fail_message){
+  if ( all(x, na.rm = TRUE) ){
+    log_pass(slot, pass_message) 
   } else {
-    log_error(slot, ...)
-    log_failures(x=x, data=data)
-  } 
+    log_error(slot, fail_message)
+    log_failures(x, data = data)
+  }
 }
