@@ -37,21 +37,6 @@ log_failures <- function(x, data){
   cat("Rows:", which(!x),'\n')
 }
 
-log_success <- function(slot, data, type){
-  
-  if (getOption("DHRtools.loglevel")=="all"){
-    log_pass(slot)
-    if (type == 'Menu'){
-      df <- as.data.frame(table(data))
-      colnames(df) <- c("Value", "N")
-      df <- dplyr::arrange(df, dplyr::desc(N))
-      print(knitr::kable(df))
-    } else {
-      cat("Must implement for", type)
-    }
-  }
-}
-
 #' Print out if validation passed or failed 
 #'
 #' @param x Logical vector indication pass/fail of validation
@@ -67,5 +52,20 @@ log_basic_validation <- function(x, slot, data, pass_message, fail_message){
   } else {
     log_error(slot, fail_message)
     log_failures(x, data = data)
+  }
+}
+
+log_success <- function(slot, data, type){
+  
+  if (getOption("DHRtools.loglevel")=="all"){
+    log_pass(slot)
+    if (type == 'Menu'){
+      df <- as.data.frame(table(data))
+      colnames(df) <- c("Value", "N")
+      df <- dplyr::arrange(df, dplyr::desc(N))
+      print(knitr::kable(df))
+    } else {
+      cat("Must implement for", type)
+    }
   }
 }
