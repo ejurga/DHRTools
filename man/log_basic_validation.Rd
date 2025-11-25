@@ -4,14 +4,18 @@
 \alias{log_basic_validation}
 \title{Print out if validation passed or failed}
 \usage{
-log_basic_validation(x, slot, type, data, ...)
+log_basic_validation(x, slot, data, pass_message, fail_message)
 }
 \arguments{
 \item{x}{Logical vector indication pass/fail of validation}
 
-\item{type}{The 'type' of the slot, returned from \link{get_slot_type}}
+\item{slot}{slot name}
 
 \item{data}{the vector of data that was validated}
+
+\item{pass_message}{Message to send to \link{log_pass}}
+
+\item{fail_message}{Message to send to \link{log_error}}
 }
 \value{
 Nothing, but prints out if validation succeeded or failed.
