@@ -2,7 +2,7 @@
 #' Simply log an error and call the slot name!
 #'
 #' @param slot the name of the slot!
-#' @inheritDotParams cat 
+#' @param ... Additional items to print via cat
 log_error <- function(slot, ...){
   cat(crayon::red("FAILURE"), " on ", slot, ": ", ..., "\n", sep = "")
 }
