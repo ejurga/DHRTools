@@ -24,6 +24,12 @@ log_pass <- function(slot, ...){
   }
 }
 
+#' Log a note
+#'
+log_note <- function(...){
+  cat(crayon::blue("Note:"), ..., sep = " ", "\n")
+}
+
 #' Print out values that failed validation
 #'
 #' @param x Logical vector indicating pass/fail of validation
