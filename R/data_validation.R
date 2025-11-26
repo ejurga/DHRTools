@@ -295,13 +295,18 @@ get_missing_schema_cols <- function(schema, data){
   in_df <- slots %in% names(data)
   missing <- slots[!in_df]
   x <- sapply(missing, get_field_importance, schema = schema)
-  if (length(missing)>0){
-    cat("These standard fields are MISSING in the data:\n")
-    cat("REQUIRED:\n")
+  if(any(x=='required')){
+    cat("REQUIRED fields missing:\n")
     cat(paste0(names(x[x=='required']), collapse = ", "))
-    cat("\nRecommended\n")
+  }
+  
+  if (any(x=='recommended')){
+    cat("\nRecommended fields missing\n")
     cat(paste0(names(x[x=='recommended']), collapse = ", "))
-    cat("\nOther:\n")
+  }
+  
+  if (any(x=='normal')){
+    cat("\nOther fields missing:\n")
     cat(paste0(names(x[x=='normal']), collapse = ", "))
     cat("\n")
   }
