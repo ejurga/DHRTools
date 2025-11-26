@@ -122,7 +122,7 @@ validate_date_slot <- function(schema, slot, data, ids){
                        ids = ids)
   # Check for date range
   time_range <- get_date_range_as_interval(schema, slot)
-  dates <- suppressWarnings(lubridate::ymd(data))
+  dates <- suppressWarnings(parse_date(data))
   within_range <- dates %within% time_range
   log_basic_validation(x = within_range, slot = slot, data = data, 
                        pass_message = "All dates within bounds",
@@ -207,14 +207,22 @@ validate_values <- function(schema, slot, x){
     return(is_val)
 }
 
+#' The date parsing this package will use.
+#' 
+#' @param x A vector of dates to parse 
+#' @returns parsed datetimes from [lubridate]
+#' @keywords internal, validation
+parse_date <- function(x){
+  lubridate::parse_date_time(x = x, orders = "%Y-%m-%d", exact = TRUE)
+}
+
 #' Are the values expressed in Year-Month-Date format?
 #' 
 #' @param x A vector of strings to test. 
 #' @returns Logical vector indicating if the string could be coerced to date format
 #' @keywords internal, validation
 is_date <- function(x){
-  #!is.na(suppressWarnings(lubridate::ymd(x)))
-  !is.na(suppressWarnings(as.Date(x, format = "%Y-%m-%d")))
+  !is.na(suppressWarnings(parse_date(x)))
 }
 
 #' Check for whitespace
