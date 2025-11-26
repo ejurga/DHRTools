@@ -307,3 +307,14 @@ min_max_value <- function(schema, slot){
   min_max <- as.numeric(c(min,max))
   if (all(is.na(min_max))) return(NA) else return(min_max)
 }
+
+#' Get the identification column, returning the 1st one in there are multiple.
+#' 
+#' @inheritParams slot_names
+get_first_identification_col <- function(schema){
+  slots <- slot_names(schema)
+  x <- is_identifier(schema, slot_names(schema))
+  id_cols <- slots[x]
+  if (length(id_cols)>1) message("More then 1 identifier column detected, using first")
+  return(id_cols[1])
+}
