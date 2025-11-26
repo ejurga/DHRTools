@@ -4,7 +4,7 @@
 \alias{validate_slot_with_data}
 \title{Validate a column of data using slot parameters}
 \usage{
-validate_slot_with_data(schema, slot, data)
+validate_slot_with_data(schema, slot, data, ids)
 }
 \arguments{
 \item{schema}{the data schema}
@@ -14,6 +14,8 @@ validate_slot_with_data(schema, slot, data)
 \item{data}{A dataframe. The relevant column will be pulled based on the slot name.
 The dataframe should have a column with the same name as the slot, but if it doesn't the
 function will exit}
+
+\item{ids}{vector of ids, used for downstream error printing}
 }
 \value{
 Nothing, but prints a log of validation successes and failures.

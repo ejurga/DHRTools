@@ -4,12 +4,14 @@
 \alias{log_failures}
 \title{Print out values that failed validation}
 \usage{
-log_failures(x, data)
+log_failures(x, data, ids = NULL)
 }
 \arguments{
 \item{x}{Logical vector indicating pass/fail of validation}
 
 \item{data}{The values that were validated -> used for printing out offending values}
+
+\item{ids}{Vector of the chosen ID column}
 }
 \value{
 Nothing, but prints out the offending values that failed validation
@@ -18,4 +20,4 @@ Nothing, but prints out the offending values that failed validation
 Print out values that failed validation
 }
 \keyword{internal,}
-\keyword{validation}
+\keyword{logging}

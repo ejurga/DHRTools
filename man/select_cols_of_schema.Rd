@@ -4,14 +4,14 @@
 \alias{select_cols_of_schema}
 \title{Select only those columns that are found in the schema}
 \usage{
-select_cols_of_schema(schema, data, log = FALSE)
+select_cols_of_schema(schema, data, loglevel = c("all", "warnings", "errors"))
 }
 \arguments{
 \item{schema}{the schema}
 
 \item{data}{dataframe to}
 
-\item{log}{TRUE/FALSE, whether to log the columns removed}
+\item{loglevel}{sets DHRtools.loglevel.}
 }
 \value{
 A dataframe, with only the columns from the schema

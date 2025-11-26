@@ -4,7 +4,7 @@
 \alias{validate_date_slot}
 \title{Validate a date-type slot}
 \usage{
-validate_date_slot(schema, slot, data)
+validate_date_slot(schema, slot, data, ids)
 }
 \description{
 Validate a date-type slot

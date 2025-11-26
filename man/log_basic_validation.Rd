@@ -4,7 +4,7 @@
 \alias{log_basic_validation}
 \title{Print out if validation passed or failed}
 \usage{
-log_basic_validation(x, slot, data, pass_message, fail_message)
+log_basic_validation(x, slot, data, pass_message, fail_message, ids = NULL)
 }
 \arguments{
 \item{x}{Logical vector indication pass/fail of validation}
@@ -16,6 +16,8 @@ log_basic_validation(x, slot, data, pass_message, fail_message)
 \item{pass_message}{Message to send to \link{log_pass}}
 
 \item{fail_message}{Message to send to \link{log_error}}
+
+\item{ids}{(optional) vector of the ids, for printing.}
 }
 \value{
 Nothing, but prints out if validation succeeded or failed.
@@ -24,4 +26,5 @@ Nothing, but prints out if validation succeeded or failed.
 Print out if validation passed or failed
 }
 \keyword{internal,}
+\keyword{logging,}
 \keyword{validation}

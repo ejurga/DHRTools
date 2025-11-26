@@ -4,7 +4,7 @@
 \alias{validate_decimal_slot}
 \title{Validate decimal slot}
 \usage{
-validate_decimal_slot(schema, slot, data)
+validate_decimal_slot(schema, slot, data, ids)
 }
 \description{
 Validate decimal slot
