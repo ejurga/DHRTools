@@ -34,13 +34,16 @@ log_note <- function(...){
 #'
 #' @param x Logical vector indicating pass/fail of validation
 #' @param data The values that were validated -> used for printing out offending values
+#' @param ids Vector of the chosen ID column
 #' @keywords internal, validation
 #' @returns Nothing, but prints out the offending values that failed validation
-log_failures <- function(x, data){
+log_failures <- function(x, data, ids = NULL){
   tab <- table(data[!x])
-  offenders <- paste0(names(tab), ' (', unname(tab), ')')
-  cat("Offending values:", paste0(offenders, collapse = ', '), '\n')
-  cat("Rows:", which(!x),'\n')
+  offenders <- paste0(dQuote(names(tab), q = FALSE), ' (', unname(tab), ')')
+  cat("    Offending values:", paste0(offenders, collapse = ', '), '\n')
+  row_n <- which(!x)
+  cat("    Rows:", row_n,'\n')
+  if (!is.null(ids))  cat("    IDs:", ids[row_n],'\n')
 }
 
 #' Print out if validation passed or failed 
@@ -50,14 +53,15 @@ log_failures <- function(x, data){
 #' @param data the vector of data that was validated
 #' @param pass_message Message to send to [log_pass]
 #' @param fail_message Message to send to [log_error]
+#' @param ids (optional) vector of the ids, for printing.
 #' @keywords internal, validation
 #' @returns Nothing, but prints out if validation succeeded or failed.
-log_basic_validation <- function(x, slot, data, pass_message, fail_message){
+log_basic_validation <- function(x, slot, data, pass_message, fail_message, ids = NULL){
   if ( all(x, na.rm = TRUE) ){
     log_pass(slot, pass_message) 
   } else {
     log_error(slot, fail_message)
-    log_failures(x, data = data)
+    log_failures(x, data = data, ids = ids)
   }
 }
 

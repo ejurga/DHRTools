@@ -21,6 +21,10 @@ validate <- function(schema, data, loglevel = c("all", "warnings", "errors")){
   # functions.  
   loglevel <- match.arg(loglevel)
   options(DHRtools.loglevel = loglevel)
+  
+  id_col <- get_first_identification_col(schema)
+  log_note("Using", id_col, "as identifier column")
+  ids <- data[[id_col]]
  
   cat("Checking data column names against dataframe\n")
   cat("--------\n")
@@ -35,7 +39,8 @@ validate <- function(schema, data, loglevel = c("all", "warnings", "errors")){
   for (slot in slots_to_process){
     validate_slot_with_data(schema,
                             slot = slot,
-                            data = data)
+                            data = data, 
+                            ids = ids)
   }
 }
 
@@ -48,10 +53,11 @@ validate <- function(schema, data, loglevel = c("all", "warnings", "errors")){
 #' @param data A dataframe. The relevant column will be pulled based on the slot name. 
 #'   The dataframe should have a column with the same name as the slot, but if it doesn't the 
 #'   function will exit
+#' @param ids vector of ids, used for downstream error printing
 #' @returns Nothing, but prints a log of validation successes and failures.
 #' @importFrom lubridate %within%
 #' @keywords internal, validation
-validate_slot_with_data <- function(schema, slot, data){
+validate_slot_with_data <- function(schema, slot, data, ids){
   
   x <- data[[slot]]
   
@@ -84,16 +90,17 @@ validate_slot_with_data <- function(schema, slot, data){
     }
   }
  
-  if      ( type == 'date'    ){  validate_date_slot(   schema, slot, data = x) }
-  else if ( type == 'decimal' ){  validate_decimal_slot(schema, slot, data = x) }
+  if      ( type == 'date'    ){  validate_date_slot(   schema, slot, data = x, ids = ids) }
+  else if ( type == 'decimal' ){  validate_decimal_slot(schema, slot, data = x, ids = ids) }
   else if ( type == 'Menu'    ){  log_basic_validation(x = validate_values(schema, slot, x = x),
                                                     slot = slot, data = x,  
                                             pass_message = "All values allowed",  
-                                            fail_message = "Values not found in picklist") }
+                                            fail_message = "Values not found in picklist", 
+                                                     ids = ids) }
   else if ( type == 'WhitespaceMinimizedString'){ 
     rgx <- get_pattern(schema, slot = slot)
     if (!is.na(rgx)){ 
-      validate_rgx(rgx = rgx, slot = slot, data = x)
+      validate_rgx(rgx = rgx, slot = slot, data = x, ids = ids)
     } else {
       log_warning(slot, "Type 'WhiteSpaceMinimized' no pattern: no validation attempted")
     }
@@ -105,28 +112,31 @@ validate_slot_with_data <- function(schema, slot, data){
 #' Validate a date-type slot
 #' 
 #' 
-validate_date_slot <- function(schema, slot, data){
+validate_date_slot <- function(schema, slot, data, ids){
   # Check for date parsing
   is_validated <- is_date(data) | validate_values(schema, slot, data)
   log_basic_validation(x = is_validated, slot = slot, data = data, 
                        pass_message = "All are either dates or null values", 
-                       fail_message = "Datetime parse fail")
+                       fail_message = "Datetime parse fail",
+                       ids = ids)
   # Check for whitespace.
   is_white <- check_whitespace(data = data)
   log_basic_validation(x = is_white, slot = slot, data = data,  
                        pass_message = "No whitespace detected",  
-                       fail_message = "Whitespace detected")
+                       fail_message = "Whitespace detected", 
+                       ids = ids)
   # Check for date range
   time_range <- get_date_range_as_interval(schema, slot)
   dates <- suppressWarnings(lubridate::ymd(data))
   within_range <- dates %within% time_range
   log_basic_validation(x = within_range, slot = slot, data = data, 
                        pass_message = "All dates within bounds",
-                       fail_message = "Dates out of bounds")
+                       fail_message = "Dates out of bounds", 
+                       ids = ids)
 }
 
 #' Validate decimal slot
-validate_decimal_slot <- function(schema, slot, data){
+validate_decimal_slot <- function(schema, slot, data, ids){
   
   # check for decimal parsing
   is_validated <- is_decimal(data) | validate_values(schema,slot,data)
@@ -136,7 +146,8 @@ validate_decimal_slot <- function(schema, slot, data){
   # check for whitspace
   log_basic_validation(x = check_whitespace(data), slot = slot, data = data,
                        pass_message = "No whitespace detected", 
-                       fail_message = "Whitespace detected")
+                       fail_message = "Whitespace detected", 
+                       ids = ids)
   # check for range
   num_range <- min_max_value(schema, slot)
   if (!all(is.na(num_range))){
@@ -144,7 +155,8 @@ validate_decimal_slot <- function(schema, slot, data){
     in_range <- nums <= max(num_range) & nums >= min(num_range)
     log_basic_validation(x = in_range, slot = slot, data = data,
                          pass_message = "All values within range", 
-                         fail_message = "Values out of range")
+                         fail_message = "Values out of range", 
+                         ids = ids)
   }
 }
 
@@ -158,12 +170,13 @@ validate_decimal_slot <- function(schema, slot, data){
 #' @param data A vector of strings to test the expression on
 #' @returns Nothing, but logs 
 #' @keywords internal, validation
-validate_rgx <- function(rgx, slot, data){
+validate_rgx <- function(rgx, slot, data, ids){
   if (any(is.na(data))) log_warning(slot, "RGX validation: ", sum(is.na(data)), " Empty values, testing remainder")
   is_pattern <- grepl(pattern = rgx, data[!is.na(data)], perl = T)
   log_basic_validation(x = is_pattern, slot = slot, data = data, 
                        pass_message = "All values passed regex check", 
-                       fail_message = paste0("Failure parsing regex ", rgx))
+                       fail_message = paste0("Failure parsing regex ", rgx), 
+                       ids = ids)
 } 
 
 #' Return TRUE if x matches val OR is NA!
