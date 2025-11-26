@@ -23,7 +23,7 @@ validate <- function(schema, data, loglevel = c("all", "warnings", "errors")){
   options(DHRtools.loglevel = loglevel)
   
   id_col <- get_first_identification_col(schema)
-  log_note("Using", id_col, "as identifier column")
+  log_message("note", slot = NULL, "Using ", id_col, " as identifier column")
   ids <- data[[id_col]]
  
   missing <- get_missing_schema_cols(schema, data)
@@ -59,18 +59,18 @@ validate_slot_with_data <- function(schema, slot, data, ids){
   # If any NA in a required column, send a warning. 
   importance <- get_field_importance(schema, slot)
   if (anyNA(x)){
-    if (importance == 'required')    log_error(slot, "NA values in required slot \n Rows: ", paste0(which(is.na(x)), collapse = ", "))
-    if (importance == 'recommended') log_warning(slot, "NA values in recommended slot. Total empty values: ", sum(is.na(x)))
+    if (importance == 'required')    log_message("error",   slot, "NA values in required slot \n Rows: ", paste0(which(is.na(x)), collapse = ", "))
+    if (importance == 'recommended') log_message("warning", slot, "NA values in recommended slot. Total empty values: ", sum(is.na(x)))
   }
   
   # Check is the slot is present in the data
   if (is.null(x)){
-    log_warning(slot, "No data. Skipping")
+    log_message("warning", slot, "No data. Skipping")
     return(NULL)
   }
   # Check if the data is all empty!
   if (all(is.na(x))){
-    log_warning(slot, "Data is all blank/empty! Skipping")
+    log_message("warning", slot, "Data is all blank/empty! Skipping")
     return(NULL)
   }
   
@@ -78,10 +78,10 @@ validate_slot_with_data <- function(schema, slot, data, ids){
   # Check if this is an identifier column -> if so, check for duplicates:
   if (is_identifier(schema, slot)){
     if (any(duplicated(x))){
-      log_error(slot, "Duplicate values in identifier column")
+      log_message("error", slot, "Duplicate values in identifier column")
       cat("  Duplicated values:", paste0(x[duplicated(x)], collapse = ", "), "\n")
     } else {
-      log_pass(slot, "No duplicates in identifier column")
+      log_message("pass", slot, "No duplicates in identifier column")
     }
   }
  
@@ -97,10 +97,10 @@ validate_slot_with_data <- function(schema, slot, data, ids){
     if (!is.na(rgx)){ 
       validate_rgx(rgx = rgx, slot = slot, data = x, ids = ids)
     } else {
-      log_warning(slot, "Type 'WhiteSpaceMinimized' no pattern: no validation attempted")
+      log_message("warning", slot, "Type 'WhiteSpaceMinimized' no pattern: no validation attempted")
     }
   } else if (type == 'Provenance') {
-      log_warning(slot, "Type: Provenance, skipping")
+      log_message("warning", slot, "Type: Provenance, skipping")
   } else { stop("Unhandled type:", type)}
 }
 
@@ -166,7 +166,7 @@ validate_decimal_slot <- function(schema, slot, data, ids){
 #' @returns Nothing, but logs 
 #' @keywords internal, validation
 validate_rgx <- function(rgx, slot, data, ids){
-  if (any(is.na(data))) log_warning(slot, "RGX validation: ", sum(is.na(data)), " Empty values, testing remainder")
+  if (any(is.na(data))) log_message("warning", slot, "RGX validation: ", sum(is.na(data)), " Empty values, testing remainder")
   is_pattern <- grepl(pattern = rgx, data[!is.na(data)], perl = T)
   log_basic_validation(x = is_pattern, slot = slot, data = data, 
                        pass_message = "All values passed regex check", 
@@ -259,19 +259,22 @@ rename_title_to_cols <- function(schema, data){
 #' 
 #' @param schema the schema
 #' @param data dataframe to
-#' @param log TRUE/FALSE, whether to log the columns removed
+#' @param loglevel sets DHRtools.loglevel.
 #' @returns A dataframe, with only the columns from the schema
 #' @keywords validation
 #' @export
-select_cols_of_schema <- function(schema, data, log = FALSE){
+select_cols_of_schema <- function(schema, data, loglevel = c("all", "warnings", "errors")){ 
+  loglevel <- match.arg(loglevel)
+  options(DHRtools.loglevel = loglevel)
   # Get slots and titles, and interlace them
   s <- slot_names(schema)  
   t <- slot_titles(schema, s)
   x <- as.vector(rbind(s,t))
   # Retrieve columns that are in the data
   in_schema <- colnames(data) %in% x
-  if (log){
-    cat("Removing columns:", paste0(colnames(data)[!in_schema], collapse = ", "), "\n")
+  if (!all(in_schema)){
+    log_message("note", sum(!in_schema), " Columns removed from dataframe", slot = NULL)
+    log_message("warning", "Removing columns: ", paste0(colnames(data)[!in_schema], collapse = ", "), slot = NULL)
   }
   sel <- data[,in_schema]  
   # Just reaarange according to slot order.
@@ -291,19 +294,18 @@ get_missing_schema_cols <- function(schema, data){
   missing <- slots[!in_df]
   x <- sapply(missing, get_field_importance, schema = schema)
   if(any(x=='required')){
-    cat("REQUIRED fields missing:\n")
-    cat(paste0(names(x[x=='required']), collapse = ", "))
+    log_message("error", "REQUIRED fields missing: ", paste0(names(x[x=='required']), collapse = ", "),
+                slot = NULL)
   }
   
   if (any(x=='recommended')){
-    cat("\nRecommended fields missing\n")
-    cat(paste0(names(x[x=='recommended']), collapse = ", "))
+    log_message("warning", "Recommended fields missing: ", paste0(names(x[x=='recommended']), collapse = ", "),
+                slot = NULL)
   }
   
   if (any(x=='normal')){
-    cat("\nOther fields missing:\n")
-    cat(paste0(names(x[x=='normal']), collapse = ", "))
-    cat("\n")
+    log_message("warning", "Other fields missing: ", paste0(names(x[x=='normal']), collapse = ", "),
+                slot = NULL)
   }
   return(missing)
 }
