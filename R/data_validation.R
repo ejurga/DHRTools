@@ -26,16 +26,11 @@ validate <- function(schema, data, loglevel = c("all", "warnings", "errors")){
   log_note("Using", id_col, "as identifier column")
   ids <- data[[id_col]]
  
-  cat("Checking data column names against dataframe\n")
-  cat("--------\n")
   missing <- get_missing_schema_cols(schema, data)
  
   slots <- slot_names(schema)
   slots_to_process <- slots[!slots %in% missing]
   
-  cat("\n")
-  cat("Validating columns\n")
-  cat("-------\n")
   for (slot in slots_to_process){
     validate_slot_with_data(schema,
                             slot = slot,
