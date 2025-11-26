@@ -115,7 +115,7 @@ validate_date_slot <- function(schema, slot, data, ids){
                        fail_message = "Datetime parse fail",
                        ids = ids)
   # Check for whitespace.
-  is_white <- check_whitespace(data = data)
+  is_white <- has_whitespace(data = data)
   log_basic_validation(x = is_white, slot = slot, data = data,  
                        pass_message = "No whitespace detected",  
                        fail_message = "Whitespace detected", 
@@ -139,7 +139,7 @@ validate_decimal_slot <- function(schema, slot, data, ids){
                        pass_message = "All values either decimal or null value", 
                        fail_message = "Decimal values failed validation")
   # check for whitspace
-  log_basic_validation(x = check_whitespace(data), slot = slot, data = data,
+  log_basic_validation(x = has_whitespace(data), slot = slot, data = data,
                        pass_message = "No whitespace detected", 
                        fail_message = "Whitespace detected", 
                        ids = ids)
@@ -217,7 +217,12 @@ is_date <- function(x){
   !is.na(suppressWarnings(as.Date(x, format = "%Y-%m-%d")))
 }
 
-check_whitespace <- function(data){
+#' Check for whitespace
+#'
+#' @param data vector of values to check
+#' @returns logical vector, TRUE if no whitespace, FALSE if dectected
+#' @keywords internal, validation
+has_whitespace <- function(data){
   !grepl(x=data, "(^[ ]{1,}|[ ]{1,}$)")
 }
 
