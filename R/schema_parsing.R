@@ -247,7 +247,7 @@ get_pattern <- function(schema, slots){
 #' @returns The type of the slot
 #' @keywords internal, parsing
 get_slot_type <- function(schema, slot){
-  r <- slot_ranges(pnc, slot)
+  r <- slot_ranges(schema, slot)
   slot_type <- r[!grepl(pattern = 'Menu$', x=r)]
   if (length(slot_type) == 0) slot_type <- 'Menu'
   return(slot_type)
