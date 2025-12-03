@@ -285,13 +285,11 @@ check_multivalues <- function(schema, slots){
 #' @keywords internal, parsing
 get_date_range_as_interval <- function(schema, slot){
   x <- schema$slots[[slot]]$todos
-  min_val <- lubridate::ymd(x[1])
-  if (x[2] == "<={today}"){ 
-    max_val <- lubridate::today()  
-  } else { 
-    max_val <- lubridate::ymd(x[2]) 
-  }
-  date_interval <- lubridate::interval(start = min_val, max_val)
+  # get min value
+  min_val <- x[grepl(x = x, ">")]
+  max_val <- x[grepl(x = x, "<")]
+  if (max_val=="<={today}") max_val <- lubridate::today()  
+  date_interval <- lubridate::interval(start = min_val, end = max_val)
   return(date_interval)
 }
 
