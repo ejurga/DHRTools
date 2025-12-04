@@ -291,6 +291,14 @@ get_date_range <- function(schema, slot, dataframe){
   return(date_range)
 }
 
+#' Convert the min or max range tokens to actual dates to check against
+#'
+#' @param token A string, taken from the "todo" value of a date slot.
+#' @param slot The slot name, used for
+#' @param dataframe The full dataframe of the data, we need this to extract the dates in the event that
+#'                  the min value is acutally another column.
+#' @returns description
+#' @keywords internal, parsing
 convert_range_token_to_date <- function(token, slot, dataframe){
 
   #If brakets, interpret this either as today or get the value from the dataframe

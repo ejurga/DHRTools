@@ -4,12 +4,12 @@
 \alias{validate}
 \title{Validate a dataframe based on the supplied schema.}
 \usage{
-validate(schema, data, loglevel = c("all", "warnings", "errors"))
+validate(schema, dataframe, loglevel = c("all", "warnings", "errors"))
 }
 \arguments{
 \item{schema}{the data schema to use}
 
-\item{data}{a dataframe of the data to test}
+\item{dataframe}{a dataframe of the data to test}
 }
 \value{
 Nothing, but prints a log of validation passes and failures.

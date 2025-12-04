@@ -4,14 +4,14 @@
 \alias{validate_slot_with_data}
 \title{Validate a column of data using slot parameters}
 \usage{
-validate_slot_with_data(schema, slot, data, ids)
+validate_slot_with_data(schema, slot, dataframe, ids)
 }
 \arguments{
 \item{schema}{the data schema}
 
 \item{slot}{The name of the slot to test}
 
-\item{data}{A dataframe. The relevant column will be pulled based on the slot name.
+\item{dataframe}{A dataframe. The relevant column will be pulled based on the slot name.
 The dataframe should have a column with the same name as the slot, but if it doesn't the
 function will exit}
 
