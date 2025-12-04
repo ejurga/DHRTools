@@ -11,11 +11,11 @@
 #' Finally, it determines the "type" of slot (e.g., date, or menu, string) and validates the data based on the type's respective rules.
 #'
 #' @param schema the data schema to use
-#' @param data a dataframe of the data to test
+#' @param dataframe a dataframe of the data to test
 #' @returns Nothing, but prints a log of validation passes and failures.
 #' @keywords validation
 #' @export
-validate <- function(schema, data, loglevel = c("all", "warnings", "errors")){
+validate <- function(schema, dataframe, loglevel = c("all", "warnings", "errors")){
 
   # Set loglevel option, I prefer this over passing the loglevel to all the 
   # functions.  
@@ -24,9 +24,9 @@ validate <- function(schema, data, loglevel = c("all", "warnings", "errors")){
   
   id_col <- get_first_identification_col(schema)
   log_message("note", slot = NULL, "Using ", id_col, " as identifier column")
-  ids <- data[[id_col]]
+  ids <- dataframe[[id_col]]
  
-  missing <- get_missing_schema_cols(schema, data)
+  missing <- get_missing_schema_cols(schema, dataframe)
  
   slots <- slot_names(schema)
   slots_to_process <- slots[!slots %in% missing]
@@ -34,7 +34,7 @@ validate <- function(schema, data, loglevel = c("all", "warnings", "errors")){
   for (slot in slots_to_process){
     validate_slot_with_data(schema,
                             slot = slot,
-                            data = data, 
+                            dataframe = dataframe, 
                             ids = ids)
   }
 }
@@ -45,16 +45,16 @@ validate <- function(schema, data, loglevel = c("all", "warnings", "errors")){
 #'
 #' @param schema the data schema 
 #' @param slot The name of the slot to test
-#' @param data A dataframe. The relevant column will be pulled based on the slot name. 
+#' @param dataframe A dataframe. The relevant column will be pulled based on the slot name. 
 #'   The dataframe should have a column with the same name as the slot, but if it doesn't the 
 #'   function will exit
 #' @param ids vector of ids, used for downstream error printing
 #' @returns Nothing, but prints a log of validation successes and failures.
 #' @importFrom lubridate %within%
 #' @keywords internal, validation
-validate_slot_with_data <- function(schema, slot, data, ids){
+validate_slot_with_data <- function(schema, slot, dataframe, ids){
   
-  x <- data[[slot]]
+  x <- dataframe[[slot]]
   
   # If any NA in a required column, send a warning. 
   importance <- get_field_importance(schema, slot)
@@ -85,7 +85,7 @@ validate_slot_with_data <- function(schema, slot, data, ids){
     }
   }
  
-  if      ( type == 'date'    ){  validate_date_slot(   schema, slot, data = x, ids = ids) }
+  if      ( type == 'date'    ){  validate_date_slot(   schema, slot, data = x, ids = ids, dataframe = dataframe)}
   else if ( type == 'decimal' ){  validate_decimal_slot(schema, slot, data = x, ids = ids) }
   else if ( type == 'Menu'    ){  log_basic_validation(x = validate_values(schema, slot, x = x),
                                                     slot = slot, data = x,  
@@ -101,13 +101,13 @@ validate_slot_with_data <- function(schema, slot, data, ids){
     }
   } else if (type == 'Provenance') {
       log_message("warning", slot, "Type: Provenance, skipping")
-  } else { stop("Unhandled type:", type)}
+  } else {log_message("error", slot, "slot type '", type, "' is currently unhandled, check manually") }
 }
 
 #' Validate a date-type slot
 #' 
 #' 
-validate_date_slot <- function(schema, slot, data, ids){
+validate_date_slot <- function(schema, slot, data, ids, dataframe){
   # Check for date parsing
   is_validated <- is_date(data) | validate_values(schema, slot, data)
   log_basic_validation(x = is_validated, slot = slot, data = data, 
@@ -121,9 +121,10 @@ validate_date_slot <- function(schema, slot, data, ids){
                        fail_message = "Whitespace detected", 
                        ids = ids)
   # Check for date range
-  time_range <- get_date_range_as_interval(schema, slot)
+  tokens <- get_date_range(schema, slot, dataframe)
+  date_ranges <- lapply(X = tokens, FUN = convert_range_token_to_date, dataframe = dataframe, slot = slot)
   dates <- suppressWarnings(parse_date(data))
-  within_range <- dates %within% time_range
+  within_range <- dates <= date_ranges$max & dates >= date_ranges$min
   log_basic_validation(x = within_range, slot = slot, data = data, 
                        pass_message = "All dates within bounds",
                        fail_message = "Dates out of bounds", 

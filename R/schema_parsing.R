@@ -277,20 +277,41 @@ check_multivalues <- function(schema, slots){
 #'
 #' This returns the acceptable date range of a date slot. 
 #' Slot date ranges appear to be coded in a strange 'todo' section of the slot.
-#' Parse this section (will likely error if not present) into a lubridate interval.
-#' A '{today}' value is parsed as the current date. 
+#' Parse this section (will likely error if not present) using '>' and '<' to 
+#' determine which is the max value and min value.
 #' 
 #' @inheritParams slot_ranges
 #' @returns A [lubridate::interval] of the acceptable date range.
 #' @keywords internal, parsing
-get_date_range_as_interval <- function(schema, slot){
+get_date_range <- function(schema, slot, dataframe){
   x <- schema$slots[[slot]]$todos
-  # get min value
   min_val <- x[grepl(x = x, ">")]
   max_val <- x[grepl(x = x, "<")]
-  if (max_val=="<={today}") max_val <- lubridate::today()  
-  date_interval <- lubridate::interval(start = min_val, end = max_val)
-  return(date_interval)
+  date_range <- lapply(X=list(min=min_val, max=max_val), function(x) if (length(x)==0) x <- NA else x)
+  return(date_range)
+}
+
+convert_range_token_to_date <- function(token, slot, dataframe){
+
+  #If brakets, interpret this either as today or get the value from the dataframe
+  if        (grepl(x=token, "today")){
+    vals <- rep(lubridate::today(), nrow(dataframe))
+  } else if (grepl(x=token, "[{}]")){
+    col <- stringr::str_extract(string=token, pattern = "\\{([a-zA-Z_]+)\\}", group = 1)
+    requested_vals <- dataframe[[col]]
+    if (is.null(requested_vals)){
+      log_message("warning", slot = slot, "Need slot ", col, " to perform range check, but data missing!")
+      vals <- rep(NA, nrow(dataframe))
+    } else {
+      vals <- suppressWarnings(parse_date(requested_vals))
+    }
+  } else if (!is.na(suppressWarnings(parse_date(token)))){
+    vals <- rep(parse_date(token), nrow(dataframe))
+  } else if (is.na(token)){
+    log_message("note", slot = slot, "No minimum value found in date range. Setting this to 1900-01-01")
+    vals <- rep(lubridate::ymd("1900-01-01"), nrow(dataframe))
+  } else {stop("Unhandled token in one of the values in todo, for date range checking: ", token)}
+  return(vals) 
 }
 
 #' Get the minimum and maximum value of a slot
