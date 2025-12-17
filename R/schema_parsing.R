@@ -300,7 +300,8 @@ get_date_range <- function(schema, slot, dataframe){
 #' @returns description
 #' @keywords internal, parsing
 convert_range_token_to_date <- function(token, slot, dataframe){
-
+  # Strip >=< characters, this can cause downstream errors in datetime parsing.
+  token <- gsub(x=token, pattern = "[><=]{1,2}", "")
   #If brakets, interpret this either as today or get the value from the dataframe
   if        (grepl(x=token, "today")){
     vals <- rep(lubridate::today(), nrow(dataframe))
